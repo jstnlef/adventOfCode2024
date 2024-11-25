@@ -7,15 +7,17 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Content Include="**\*.txt" Exclude="bin\**\*.txt;obj\**\*.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
         <Compile Include="Common\Functools.fs" />
         <Compile Include="Common\BTree.fs" />
         <Compile Include="Common\Itertools.fs" />
         <Compile Include="Common\Vector2d.fs" />
         <Compile Include="Day1.fs" />
         <Compile Include="Day2.fs" />
-        <Content Include="**\*.txt" Exclude="bin\**\*.txt;obj\**\*.txt">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
+        <Compile Include="Day3.fs" />
+        <Compile Include="Day4.fs" />
     </ItemGroup>
 
     <ItemGroup>
@@ -23,6 +25,11 @@
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
         <PackageReference Include="xunit" Version="2.9.2"/>
         <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Inputs\Day2\" />
+      <Folder Include="Inputs\Day3\" />
     </ItemGroup>
 
 </Project>
