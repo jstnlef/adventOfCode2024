@@ -1,5 +1,12 @@
-bin/
-obj/
+.idea
+.env
+*.DotSettings.user
+
+**/bin/
+**/obj/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
+**/TestResults/
+
+.fake
