@@ -7,15 +7,16 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Content Include="**\*.txt" Exclude="bin\**\*.txt;obj\**\*.txt">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <Compile Include="Common\Functools.fs" />
-        <Compile Include="Common\BTree.fs" />
-        <Compile Include="Common\Itertools.fs" />
-        <Compile Include="Common\Vector2d.fs" />
-        <Compile Include="Day1.fs" />
-        <None Include="CreateDay.fsx" />
+      <None Include="CreateDay.fsx" />
+      <Content Include="**\*.txt" Exclude="bin\**\*.txt;obj\**\*.txt">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      
+      <Compile Include="Common\Functools.fs" />
+      <Compile Include="Common\BTree.fs" />
+      <Compile Include="Common\Itertools.fs" />
+      <Compile Include="Common\Vector2d.fs" />
+      <Compile Include="Day*.fs" />
     </ItemGroup>
 
     <ItemGroup>
