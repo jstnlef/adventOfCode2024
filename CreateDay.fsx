@@ -1,3 +1,4 @@
+open System
 open System.IO
 
 let getArguments (args: string array) =
@@ -13,6 +14,12 @@ if args.Length <> 1 then
     printfn "Usage: fsi CreateDay.fsx <DayNum>"
 else
     let dayName = $"Day{args[0]}"
+    let dayPath = $"{dayName}.fs"
+
+    if File.Exists(dayPath) then
+      printfn "Day already exists. Exiting"
+      Environment.Exit(1)
+
     // Create input directory
     let inputDirectory = $"Inputs/{dayName}"
     Directory.CreateDirectory(inputDirectory) |> ignore
@@ -37,8 +44,7 @@ module Tests =
   let ``Part 2`` (filename: string, expected: int) =
     Assert.True(false)"""
 
-    let filePath = $"{dayName}.fs"
-    use writer = new StreamWriter(filePath)
+    use writer = new StreamWriter(dayPath)
     writer.WriteLine(content)
 
     printfn $"'{dayName}' created successfully"
