@@ -15,10 +15,6 @@
         <Compile Include="Common\Itertools.fs" />
         <Compile Include="Common\Vector2d.fs" />
         <Compile Include="Day1.fs" />
-        <Compile Include="Day2.fs" />
-        <Compile Include="Day3.fs" />
-        <Compile Include="Day4.fs" />
-        <Compile Include="Day5.fs" />
         <None Include="CreateDay.fsx" />
     </ItemGroup>
 
