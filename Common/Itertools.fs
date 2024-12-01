@@ -7,3 +7,12 @@ let rec combinationsOf2 l =
         if x < y then
           yield [| x; y |]
   }
+
+let countOccurrences elements =
+  elements
+  |> Seq.fold
+    (fun acc element ->
+      match Map.tryFind element acc with
+      | Some count -> Map.add element (count + 1) acc
+      | None -> Map.add element 1 acc)
+    Map.empty
