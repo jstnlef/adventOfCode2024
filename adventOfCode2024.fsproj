@@ -16,6 +16,7 @@
       <Compile Include="Common\BTree.fs" />
       <Compile Include="Common\Itertools.fs" />
       <Compile Include="Common\Vector2d.fs" />
+      <Compile Include="Common\Input.fs" />
       <Compile Include="Day*.fs" />
     </ItemGroup>
 
