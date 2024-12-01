@@ -1,6 +1,5 @@
-module adventOfCode2024.Common.Input
+module Common.Input
 
 open System.IO
 
-let parseByLine transform filename =
-  filename |> File.ReadLines |> Seq.map transform
+let parseByLine transform = File.ReadLines >> Seq.map transform
