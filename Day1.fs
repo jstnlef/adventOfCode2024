@@ -25,13 +25,13 @@ module Tests =
   [<Theory>]
   [<InlineData("Inputs/Day1/test.txt", 11)>]
   [<InlineData("Inputs/Day1/input.txt", 2000468)>]
-  let ``Sum of smallest distances between location ids`` (filename: string, expected: int) =
+  let ``Part 1: Sum of smallest distances between location ids`` (filename: string, expected: int) =
     let result = filename |> LocationIds.parse |> LocationIds.sumOfSmallestDistances
     Assert.Equal(expected, result)
 
   [<Theory>]
   [<InlineData("Inputs/Day1/test.txt", 31)>]
   [<InlineData("Inputs/Day1/input.txt", 18567089)>]
-  let ``Calculated similarity score`` (filename: string, expected: int) =
+  let ``Part 2: Calculated similarity score`` (filename: string, expected: int) =
     let result = filename |> LocationIds.parse |> LocationIds.similarityScore
     Assert.Equal(expected, result)
