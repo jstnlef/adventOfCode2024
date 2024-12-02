@@ -1,21 +1,23 @@
 module Day2
 
+open System
 open Common
 
 let parseReports filename =
   filename |> Input.parseByLine (fun line -> line.Split(" ") |> Array.map int)
 
 module Report =
-  let isWithinTolerances acc delta =
-    (not (abs delta = 0 || abs delta > 3))
-    && (acc <= 0 && delta < 0 || acc >= 0 && delta > 0)
+  let isWithinTolerances sign delta deltaSign =
+    let absDelta = abs delta
+    (sign = deltaSign || sign = 0) && (absDelta > 0 && absDelta <= 3)
 
-  let compareRawLevels state (a, b) =
-    match state with
-    | acc, false -> (acc, false)
-    | acc, true ->
-      let delta = a - b
-      (acc + delta, isWithinTolerances acc delta)
+  let compareRawLevels (sign, restIsSafe) (a, b) =
+    if not restIsSafe then
+      sign, false
+    else
+      let delta: int = a - b
+      let deltaSign = Math.Sign(delta)
+      (deltaSign, isWithinTolerances sign delta deltaSign)
 
   let isSafe report =
     report
