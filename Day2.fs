@@ -18,7 +18,11 @@ module Report =
       (acc + delta, isWithinTolerances acc delta)
 
   let isSafe report =
-    report |> Array.pairwise |> Array.fold compareRawLevels (0, true) |> snd
+    report
+    |> Array.pairwise
+    |> Seq.scan compareRawLevels (0, true)
+    |> Seq.exists (fun (_, isSafe) -> not isSafe)
+    |> not
 
   let isSafeWithProblemDampener (report: int array) =
     seq { 0 .. report.Length - 1 }
