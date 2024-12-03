@@ -8,16 +8,7 @@ type Instruction =
   | Enable
   | Disable
 
-let parseInstructions onlyMuls filename =
-  let mulOnly = "(?<mul>mul\((?<left>\d+),(?<right>\d+)\))"
-  let withEnable = "|(?<do>do\(\))|(?<dont>don't\(\))"
-
-  let regex =
-    if onlyMuls then
-      Regex(mulOnly)
-    else
-      Regex(mulOnly + withEnable)
-
+let parseInstructions (regex: Regex) filename =
   let parseInstruction (m: Match) =
     if m.Value.StartsWith("mul") then
       Mul(int m.Groups["left"].Value, int m.Groups["right"].Value)
@@ -26,12 +17,15 @@ let parseInstructions onlyMuls filename =
     elif m.Value.StartsWith("do") then
       Enable
     else
-      failwith "Unknown match!"
+      failwith "Unknown instruction!"
 
   filename |> File.ReadAllText |> regex.Matches |> Seq.map parseInstruction
 
-let parseMulsOnly filename = parseInstructions true filename
-let parseAllInstructions filename = parseInstructions false filename
+let parseMulsOnly filename =
+  filename |> parseInstructions (Regex("mul\((?<left>\d+),(?<right>\d+)\)"))
+
+let parseAllInstructions filename =
+  filename |> parseInstructions (Regex("mul\((?<left>\d+),(?<right>\d+)\)|do\(\)|don't\(\)"))
 
 let runProgram instructions =
   let execute (acc, enable) instruction =
