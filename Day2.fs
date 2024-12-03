@@ -11,7 +11,7 @@ module Report =
     let absDelta = abs delta
     (sign = deltaSign || sign = 0) && (absDelta > 0 && absDelta <= 3)
 
-  let compareRawLevels (sign, restIsSafe) (a, b) =
+  let compareLevels (sign, restIsSafe) (a, b) =
     if not restIsSafe then
       sign, false
     else
@@ -22,7 +22,7 @@ module Report =
   let isSafe report =
     report
     |> Array.pairwise
-    |> Seq.scan compareRawLevels (0, true)
+    |> Seq.scan compareLevels (0, true)
     |> Seq.exists (fun (_, isSafe) -> not isSafe)
     |> not
 
