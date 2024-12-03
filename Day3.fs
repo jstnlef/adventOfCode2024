@@ -13,6 +13,34 @@ let parseMuls filename =
 
 let doMultiply (a, b) = a * b
 
+type Instruction =
+  | Mul of int * int
+  | Enable
+  | Disable
+
+let parseInstructions filename =
+  let mulRegex =
+    Regex("(?<mul>mul\((?<left>\d+),(?<right>\d+)\))|(?<do>do\(\))|(?<dont>don't\(\))")
+
+  let parseInstruction (m: Match) =
+    if m.Value.StartsWith("mul") then
+      Mul(int m.Groups["left"].Value, int m.Groups["right"].Value)
+    elif m.Value.StartsWith("don't") then
+      Disable
+    else
+      Enable
+
+  filename |> File.ReadAllText |> mulRegex.Matches |> Seq.map parseInstruction
+
+let runProgram instructions =
+  let execute (acc, enable) instruction =
+    match instruction with
+    | Enable -> acc, true
+    | Disable -> acc, false
+    | Mul(a, b) -> (if enable then acc + (a * b) else acc), enable
+
+  instructions |> Seq.fold execute (0, true) |> fst
+
 module Tests =
   open Xunit
 
@@ -24,6 +52,8 @@ module Tests =
     Assert.Equal(expected, result)
 
   [<Theory>]
-  [<InlineData("Inputs/Day3/test.txt", -1)>]
-  [<InlineData("Inputs/Day3/input.txt", -1)>]
-  let ``Part 2`` (filename: string, expected: int) = Assert.True(false)
+  [<InlineData("Inputs/Day3/test.txt", 48)>]
+  [<InlineData("Inputs/Day3/input.txt", 82045421)>]
+  let ``Part 2`` (filename: string, expected: int) =
+    let result = filename |> parseInstructions |> runProgram
+    Assert.Equal(expected, result)
