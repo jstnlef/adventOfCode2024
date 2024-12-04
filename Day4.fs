@@ -16,16 +16,29 @@ let parseToCharMap filename =
 
   d
 
+let allDirections x =
+  [| for y in -1 .. 1 do
+       for x in -1 .. 1 do
+         if (x, y) <> (0, 0) then
+           yield (x, y) |]
+
 let possibleWordPositions (x, y) : (int * int) array seq =
+  let dirs = allDirections 1
   seq { [| (5, 0); (6, 0); (7, 0); (8, 0) |] }
 
-let countXMAS (charMap: Dictionary<char, Set<int * int>>) =
+let wordIsXMAS (charMap: Dictionary<char, Set<int * int>>) positions =
   let word = "XMAS"
-  let possibleStarts = charMap['X']
 
-  possibleStarts |> Seq.map possibleWordPositions
+  positions
+  |> Array.indexed
+  |> Array.forall (fun (i, pos) -> charMap[word[i]].Contains(pos))
 
-  0
+
+let countXMAS (charMap: Dictionary<char, Set<int * int>>) =
+  charMap['X']
+  |> Seq.collect possibleWordPositions
+  |> Seq.filter (wordIsXMAS charMap)
+  |> Seq.length
 
 module Tests =
   open Xunit
