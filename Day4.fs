@@ -16,16 +16,17 @@ let parseToCharMap filename =
 
   d
 
-let possibleXMASPositions (x, y) : (int * int) array seq =
+let possibleXMASPositions (x, y) =
   let allDirections =
-    [| for y in -1 .. 1 do
-       for x in -1 .. 1 do
-         if (x, y) <> (0, 0) then
-           yield (x, y) |]
-  seq {
-    for dx, dy in allDirections do
-      yield Array.init 4 (fun i -> x+dx*i, y+dy*i)
-  }
+    seq {
+      for y in -1 .. 1 do
+        for x in -1 .. 1 do
+          if (x, y) <> (0, 0) then
+            yield (x, y)
+    }
+
+  [| for dx, dy in allDirections do
+       yield Array.init 4 (fun i -> x + dx * i, y + dy * i) |]
 
 let wordIsXMAS (charMap: Dictionary<char, Set<int * int>>) positions =
   let word = "XMAS"
@@ -33,7 +34,6 @@ let wordIsXMAS (charMap: Dictionary<char, Set<int * int>>) positions =
   positions
   |> Array.indexed
   |> Array.forall (fun (i, pos) -> charMap[word[i]].Contains(pos))
-
 
 let countXMAS (charMap: Dictionary<char, Set<int * int>>) =
   charMap['X']
@@ -43,23 +43,17 @@ let countXMAS (charMap: Dictionary<char, Set<int * int>>) =
 
 let isCrossMAS (charMap: Dictionary<char, Set<int * int>>) (x, y) =
   let allPositions =
-    [| (-1, -1); (-1, 1); (1, 1); (1, -1) |]
-    |> Array.map (fun (dx, dy) -> x + dx, y + dy)
+    [| (x - 1, y - 1); (x - 1, y + 1); (x + 1, y + 1); (x + 1, y - 1) |]
 
   let checkIfCross p1 p2 =
-    if charMap['M'].Contains(p1) then
-      charMap['S'].Contains(p2)
-    elif charMap['S'].Contains(p1) then
-      charMap['M'].Contains(p2)
-    else
-      false
+    (charMap['M'].Contains(p1) && charMap['S'].Contains(p2))
+    || (charMap['S'].Contains(p1) && charMap['M'].Contains(p2))
 
-  checkIfCross allPositions[0] allPositions[2] && checkIfCross allPositions[1] allPositions[3]
+  checkIfCross allPositions[0] allPositions[2]
+  && checkIfCross allPositions[1] allPositions[3]
 
 let countCrossMAS (charMap: Dictionary<char, Set<int * int>>) =
-  charMap['A']
-  |> Seq.filter (isCrossMAS charMap)
-  |> Seq.length
+  charMap['A'] |> Set.filter (isCrossMAS charMap) |> Set.count
 
 module Tests =
   open Xunit
