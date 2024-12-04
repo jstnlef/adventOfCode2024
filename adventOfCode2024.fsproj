@@ -1,29 +1,29 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <IsPackable>false</IsPackable>
-        <GenerateProgramFile>false</GenerateProgramFile>
-    </PropertyGroup>
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <GenerateProgramFile>false</GenerateProgramFile>
+  </PropertyGroup>
 
-    <ItemGroup>
-      <None Include="CreateDay.fsx" />
-      <Content Include="**\*.txt" Exclude="bin\**\*.txt;obj\**\*.txt">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      
-      <Compile Include="Common\Functools.fs" />
-      <Compile Include="Common\BTree.fs" />
-      <Compile Include="Common\Itertools.fs" />
-      <Compile Include="Common\Vector2d.fs" />
-      <Compile Include="Common\Input.fs" />
-      <Compile Include="Day*.fs" />
-    </ItemGroup>
+  <ItemGroup>
+    <None Include="CreateDay.fsx"/>
+    <Content Include="**\*.txt" Exclude="bin\**\*.txt;obj\**\*.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
 
-    <ItemGroup>
-        <PackageReference Include="coverlet.collector" Version="6.0.2"/>
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
-        <PackageReference Include="xunit" Version="2.9.2"/>
-        <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2"/>
-    </ItemGroup>
+    <Compile Include="Common\Functools.fs"/>
+    <Compile Include="Common\BTree.fs"/>
+    <Compile Include="Common\Itertools.fs"/>
+    <Compile Include="Common\Vector2d.fs"/>
+    <Compile Include="Common\Input.fs"/>
+    <Compile Include="Day*.fs"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.2"/>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0"/>
+    <PackageReference Include="xunit" Version="2.9.2"/>
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2"/>
+  </ItemGroup>
 </Project>
