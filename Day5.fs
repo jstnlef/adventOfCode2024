@@ -39,24 +39,37 @@ let findIncorrectUpdates state : int array array =
   state.updates |> Array.filter (fun update -> not (isUpdateCorrect state update))
 
 let fixUpdates state (update: int array) : int array =
-  let doInsertion i v =
-    let mutable j = i - 1
+  let rulesMap =
+    state.rules
+    |> Array.fold
+      (fun acc (key, value) ->
+        let currentSet =
+          match Map.tryFind key acc with
+          | Some set -> set
+          | None -> Set.empty
 
-    while j >= 0 && j < update.Length do
-      update[j + 1] <- update[j]
-      j <- j - 1
+        Map.add key (Set.add value currentSet) acc)
+      Map.empty
 
-    update[j + 1] <- v
+  let fixRule a b =
+    let ia = Array.findIndex (fun n -> n = a) update
+    let ib = Array.findIndex (fun n -> n = b) update
 
-  let fixRule (a, b) =
-    match (Array.tryFindIndex (fun n -> n = a) update), Array.tryFindIndex (fun n -> n = b) update with
-    | Some(i), Some(j) ->
-      if i > j then
-        doInsertion j a
-    | _ -> ()
+    let afterPagesA: Set<int> =
+      rulesMap |> Map.tryFind a |> Option.defaultValue Set.empty
 
-  Array.iter fixRule state.rules
-  update
+    let afterPagesB: Set<int> =
+      rulesMap |> Map.tryFind b |> Option.defaultValue Set.empty
+
+    if Set.contains b afterPagesA && ia > ib then
+      -1
+    elif Set.isEmpty afterPagesA then
+      1
+    // elif Set.contains a afterPagesB && ib > ia then -1
+    else
+      0
+
+  Array.sortWith fixRule update
 
 let findMiddle (update: int array) = update[update.Length / 2]
 
