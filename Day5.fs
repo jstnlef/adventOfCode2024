@@ -6,25 +6,12 @@ type State =
   { rules: (int * int) array
     updates: int array array }
 
-let parse filename : State =
-  let text = filename |> File.ReadAllText
-  let split = text.Split("\n\n")
-
-  let rules =
-    split[0].Split("\n")
-    |> Array.map (fun s ->
-      let split = s.Split("|")
-      int split[0], int split[1])
-
-  let updates =
-    split[1].Trim().Split("\n")
-    |> Array.map (fun s -> s.Split(",") |> Array.map int)
-
-  { rules = rules; updates = updates }
-
 let isUpdateCorrect state update =
   let verifyRule (a, b) =
-    match Array.tryFindIndex (fun n -> n = a) update, Array.tryFindIndex (fun n -> n = b) update with
+    let maybeIndexA = Array.tryFindIndex (fun n -> n = a) update
+    let maybeIndexB = Array.tryFindIndex (fun n -> n = b) update
+
+    match maybeIndexA, maybeIndexB with
     | Some(i), Some(j) -> i < j
     | _ -> true
 
@@ -50,6 +37,22 @@ let fixUpdates state (update: int array) : int array =
 
 let findMiddle (update: int array) = update[update.Length / 2]
 
+let parse filename : State =
+  let text = filename |> File.ReadAllText
+  let split = text.Split("\n\n")
+
+  let rules =
+    split[0].Split("\n")
+    |> Array.map (fun s ->
+      let split = s.Split("|")
+      int split[0], int split[1])
+
+  let updates =
+    split[1].Trim().Split("\n")
+    |> Array.map (fun s -> s.Split(",") |> Array.map int)
+
+  { rules = rules; updates = updates }
+
 module Tests =
   open Xunit
 
@@ -67,9 +70,6 @@ module Tests =
     let state = filename |> parse
 
     let result =
-      state
-      |> findIncorrectUpdates
-      |> Array.map (fixUpdates state)
-      |> Array.sumBy findMiddle
+      state |> findIncorrectUpdates |> Array.sumBy (fixUpdates state >> findMiddle)
 
     Assert.Equal(expected, result)
