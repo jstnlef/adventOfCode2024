@@ -22,18 +22,41 @@ let parse filename : State =
 
   { rules = rules; updates = updates }
 
+let isUpdateCorrect state update =
+  let indexMap = update |> Array.mapi (fun i value -> value, i) |> Map.ofArray
+
+  let verifyRule (a, b) =
+    match Map.tryFind a indexMap, Map.tryFind b indexMap with
+    | Some(i), Some(j) -> i < j
+    | _ -> true
+
+  state.rules |> Array.forall verifyRule
+
 let findCorrectUpdates state : int array array =
-  let isUpdateCorrect update =
-    let indexMap = update |> Array.mapi (fun idx value -> value, idx) |> Map.ofArray
+  state.updates |> Array.filter (isUpdateCorrect state)
 
-    let verifyRule (a, b) =
-      match Map.tryFind a indexMap, Map.tryFind b indexMap with
-      | Some(i), Some(j) -> i < j
-      | _ -> true
+let findIncorrectUpdates state : int array array =
+  state.updates |> Array.filter (fun update -> not (isUpdateCorrect state update))
 
-    state.rules |> Array.forall verifyRule
+let fixUpdates state (update: int array) : int array =
+  let doInsertion i v =
+    let mutable j = i - 1
 
-  state.updates |> Array.filter isUpdateCorrect
+    while j >= 0 && j < update.Length do
+      update[j + 1] <- update[j]
+      j <- j - 1
+
+    update[j + 1] <- v
+
+  let fixRule (a, b) =
+    match (Array.tryFindIndex (fun n -> n = a) update), Array.tryFindIndex (fun n -> n = b) update with
+    | Some(i), Some(j) ->
+      if i > j then
+        doInsertion j a
+    | _ -> ()
+
+  Array.iter fixRule state.rules
+  update
 
 let findMiddle (update: int array) = update[update.Length / 2]
 
@@ -44,10 +67,19 @@ module Tests =
   [<InlineData("Inputs/Day5/test.txt", 143)>]
   [<InlineData("Inputs/Day5/input.txt", 4924)>]
   let ``Part 1: Sum of middle pages of correct updates to safety manual`` (filename: string, expected: int) =
-    let result = filename |> parse |> findCorrectUpdates |> Seq.sumBy findMiddle
+    let result = filename |> parse |> findCorrectUpdates |> Array.sumBy findMiddle
     Assert.Equal(expected, result)
 
   [<Theory>]
-  [<InlineData("Inputs/Day5/test.txt", -1)>]
+  [<InlineData("Inputs/Day5/test.txt", 123)>]
   [<InlineData("Inputs/Day5/input.txt", -1)>]
-  let ``Part 2`` (filename: string, expected: int) = Assert.True(false)
+  let ``Part 2: Sum of middle pages of fixed updates to safety manual`` (filename: string, expected: int) =
+    let state = filename |> parse
+
+    let result =
+      state
+      |> findIncorrectUpdates
+      |> Array.map (fixUpdates state)
+      |> Array.sumBy findMiddle
+
+    Assert.Equal(expected, result)
