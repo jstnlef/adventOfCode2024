@@ -23,10 +23,8 @@ let parse filename : State =
   { rules = rules; updates = updates }
 
 let isUpdateCorrect state update =
-  let indexMap = update |> Array.mapi (fun i value -> value, i) |> Map.ofArray
-
   let verifyRule (a, b) =
-    match Map.tryFind a indexMap, Map.tryFind b indexMap with
+    match Array.tryFindIndex (fun n -> n = a) update, Array.tryFindIndex (fun n -> n = b) update with
     | Some(i), Some(j) -> i < j
     | _ -> true
 
@@ -39,35 +37,14 @@ let findIncorrectUpdates state : int array array =
   state.updates |> Array.filter (fun update -> not (isUpdateCorrect state update))
 
 let fixUpdates state (update: int array) : int array =
-  let rulesMap =
-    state.rules
-    |> Array.fold
-      (fun acc (key, value) ->
-        let currentSet =
-          match Map.tryFind key acc with
-          | Some set -> set
-          | None -> Set.empty
-
-        Map.add key (Set.add value currentSet) acc)
-      Map.empty
-
   let fixRule a b =
-    let ia = Array.findIndex (fun n -> n = a) update
-    let ib = Array.findIndex (fun n -> n = b) update
+    let ruleForA = state.rules |> Array.tryFind (fun (ra, rb) -> ra = a && rb = b)
+    let ruleForB = state.rules |> Array.tryFind (fun (rb, ra) -> ra = a && rb = b)
 
-    let afterPagesA: Set<int> =
-      rulesMap |> Map.tryFind a |> Option.defaultValue Set.empty
-
-    let afterPagesB: Set<int> =
-      rulesMap |> Map.tryFind b |> Option.defaultValue Set.empty
-
-    if Set.contains b afterPagesA && ia > ib then
-      -1
-    elif Set.isEmpty afterPagesA then
-      1
-    // elif Set.contains a afterPagesB && ib > ia then -1
-    else
-      0
+    match ruleForA, ruleForB with
+    | Some _, _ -> -1
+    | None, Some _ -> 1
+    | None, None -> 0
 
   Array.sortWith fixRule update
 
@@ -85,7 +62,7 @@ module Tests =
 
   [<Theory>]
   [<InlineData("Inputs/Day5/test.txt", 123)>]
-  [<InlineData("Inputs/Day5/input.txt", -1)>]
+  [<InlineData("Inputs/Day5/input.txt", 6085)>]
   let ``Part 2: Sum of middle pages of fixed updates to safety manual`` (filename: string, expected: int) =
     let state = filename |> parse
 
