@@ -3,54 +3,47 @@ module Day5
 open System.IO
 
 type State =
-  { rules: (int * int) array
-    updates: int array array }
+  { rules: Set<string * string>
+    updates: string array array }
 
 let isUpdateCorrect state update =
-  let verifyRule (a, b) =
-    let maybeIndexA = Array.tryFindIndex (fun n -> n = a) update
-    let maybeIndexB = Array.tryFindIndex (fun n -> n = b) update
+  let indexMap = update |> Array.mapi (fun i value -> value, i) |> Map.ofArray
 
-    match maybeIndexA, maybeIndexB with
+  let verifyRule (a, b) =
+    match Map.tryFind a indexMap, Map.tryFind b indexMap with
     | Some(i), Some(j) -> i < j
     | _ -> true
 
-  state.rules |> Array.forall verifyRule
+  state.rules |> Set.forall verifyRule
 
-let findCorrectUpdates state : int array array =
+let findCorrectUpdates state =
   state.updates |> Array.filter (isUpdateCorrect state)
 
-let findIncorrectUpdates state : int array array =
-  state.updates |> Array.filter (fun update -> not (isUpdateCorrect state update))
+let findIncorrectUpdates state =
+  state.updates |> Array.filter (isUpdateCorrect state >> not)
 
-let fixUpdates state (update: int array) : int array =
+let fixUpdates state update =
   let fixRule a b =
-    let ruleForA = state.rules |> Array.tryFind (fun (ra, rb) -> ra = a && rb = b)
-    let ruleForB = state.rules |> Array.tryFind (fun (rb, ra) -> ra = a && rb = b)
-
-    match ruleForA, ruleForB with
-    | Some _, _ -> -1
-    | None, Some _ -> 1
-    | None, None -> 0
+    if Set.contains (a, b) state.rules then 1
+    elif Set.contains (b, a) state.rules then -1
+    else 0
 
   Array.sortWith fixRule update
 
-let findMiddle (update: int array) = update[update.Length / 2]
+let findMiddle (update: _ array) = int update[update.Length / 2]
 
-let parse filename : State =
+let parse filename =
   let text = filename |> File.ReadAllText
-  let split = text.Split("\n\n")
+  let split = text.Trim().Split("\n\n")
 
   let rules =
     split[0].Split("\n")
     |> Array.map (fun s ->
       let split = s.Split("|")
-      int split[0], int split[1])
+      split[0], split[1])
+    |> Set
 
-  let updates =
-    split[1].Trim().Split("\n")
-    |> Array.map (fun s -> s.Split(",") |> Array.map int)
-
+  let updates = split[1].Split("\n") |> Array.map _.Split(",")
   { rules = rules; updates = updates }
 
 module Tests =
