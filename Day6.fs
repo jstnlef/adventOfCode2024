@@ -18,7 +18,7 @@ module Guard =
 
   let rotate guard : Guard =
     { guard with
-        direction = Vector2d.rotate90DegreesCC guard.direction }
+        direction = Vector2d.rotate90DegreesC guard.direction }
 
   let move guard : Guard =
     { guard with
