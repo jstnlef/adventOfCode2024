@@ -83,6 +83,8 @@ module Tests =
     Assert.Equal(expected, result)
 
   [<Theory>]
-  [<InlineData("Inputs/Day6/test.txt", -1)>]
+  [<InlineData("Inputs/Day6/test.txt", 6)>]
   [<InlineData("Inputs/Day6/input.txt", -1)>]
-  let ``Part 2`` (filename: string, expected: int) = Assert.True(false)
+  let ``Part 2: Number of possible obstructions for guard loops`` (filename: string, expected: int) =
+    let result = filename |> parseMap |> (fun _ -> 0)
+    Assert.Equal(expected, result)
