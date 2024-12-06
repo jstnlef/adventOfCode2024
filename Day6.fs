@@ -37,6 +37,8 @@ let countGuardMovement initialMap =
     let x, y = Guard.lookAhead mapState.guard
 
     if mapState |> (isInbounds (x, y) >> not) then
+      // I still want to move the guard out of bounds so the outer loop
+      // terminates
       { mapState with
           guard = mapState.guard |> Guard.move }
     else
