@@ -12,30 +12,43 @@ type Lab =
     guard: Guard
     visited: Set<int * int> }
 
-let nextMove guard =
-  Vector2d.add guard.position guard.direction
+module Guard =
+  let lookAhead guard : int * int =
+    Vector2d.add guard.position guard.direction
+
+  let rotate guard : Guard =
+    { guard with
+        direction = Vector2d.rotate90DegreesCC guard.direction }
+
+  let move guard : Guard =
+    { guard with
+        position = lookAhead guard }
+
+let isInbounds (x, y) mapState =
+  let height = mapState.map.Length
+  let width = mapState.map[0].Length
+  x >= 0 && x < width && y >= 0 && y < height
+
+let stateIsValid mapState =
+  isInbounds mapState.guard.position mapState
 
 let countGuardMovement initialMap =
   let moveGuard mapState _ =
-    let x, y = nextMove mapState.guard
-
-    let newDirection =
-      if mapState.map[y][x] = '#' then
-        Vector2d.rotate90DegreesCC mapState.guard.direction
-      else
-        mapState.guard.direction
+    let x, y = Guard.lookAhead mapState.guard
 
     let newGuard =
-      { position = nextMove mapState.guard
-        direction = newDirection }
+      if mapState.map[y][x] = '#' then
+        mapState.guard |> (Guard.rotate >> Guard.move)
+      else
+        mapState.guard |> Guard.move
 
     { mapState with
         guard = newGuard
-        visited = Set.add (x, y) mapState.visited }
+        visited = Set.add newGuard.position mapState.visited }
 
   Seq.initInfinite id
   |> Seq.scan moveGuard initialMap
-  |> Seq.take 42
+  |> Seq.takeWhile stateIsValid
   |> Seq.last
   |> _.visited
   |> Seq.length
