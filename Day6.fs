@@ -36,15 +36,19 @@ let countGuardMovement initialMap =
   let moveGuard mapState _ =
     let x, y = Guard.lookAhead mapState.guard
 
-    let newGuard =
-      if mapState.map[y][x] = '#' then
-        mapState.guard |> (Guard.rotate >> Guard.move)
-      else
-        mapState.guard |> Guard.move
+    if mapState |> (isInbounds (x, y) >> not) then
+      { mapState with
+          guard = mapState.guard |> Guard.move }
+    else
+      let newGuard =
+        if mapState.map[y][x] = '#' then
+          mapState.guard |> (Guard.rotate >> Guard.move)
+        else
+          mapState.guard |> Guard.move
 
-    { mapState with
-        guard = newGuard
-        visited = Set.add newGuard.position mapState.visited }
+      { mapState with
+          guard = newGuard
+          visited = Set.add newGuard.position mapState.visited }
 
   Seq.initInfinite id
   |> Seq.scan moveGuard initialMap
@@ -73,7 +77,7 @@ module Tests =
 
   [<Theory>]
   [<InlineData("Inputs/Day6/test.txt", 41)>]
-  [<InlineData("Inputs/Day6/input.txt", -1)>]
+  [<InlineData("Inputs/Day6/input.txt", 4602)>]
   let ``Part 1: Number of spots visited by the guard`` (filename: string, expected: int) =
     let result = filename |> parseMap |> countGuardMovement
     Assert.Equal(expected, result)
