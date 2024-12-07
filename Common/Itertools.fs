@@ -8,6 +8,28 @@ let rec combinationsOf2 l =
           yield [| x; y |]
   }
 
+let rec combinations k lst =
+  match k, lst with
+  | 0, _ -> seq [ [] ]
+  | _, [] -> Seq.empty
+  | k, x :: xs ->
+    let withX = combinations (k - 1) xs |> Seq.map (fun tail -> x :: tail)
+    let withoutX = combinations k xs
+    Seq.append withX withoutX
+
+let rec combinationsWithReplacement k lst =
+  match k, lst with
+  | 0, _ -> seq [ [] ]
+  | _, [] -> Seq.empty
+  | k, x :: xs ->
+    seq {
+      for combo in combinationsWithReplacement (k - 1) (x :: xs) do
+        yield x :: combo
+
+      for combo in combinationsWithReplacement k xs do
+        yield combo
+    }
+
 let countOccurrences elements =
   elements
   |> Seq.fold
