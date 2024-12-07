@@ -42,8 +42,13 @@ module Tests =
     Assert.Equal(expected, result)
 
   [<Theory>]
-  [<InlineData("Inputs/Day7/test.txt", -1)>]
-  [<InlineData("Inputs/Day7/input.txt", -1)>]
-  let ``Part 2`` (filename: string, expected: int) =
-    let result = 0
+  [<InlineData("Inputs/Day7/test.txt", 11387)>]
+  [<InlineData("Inputs/Day7/input.txt", 169122112716571L)>]
+  let ``Part 2`` (filename: string, expected: int64) =
+    let result =
+      filename
+      |> parse
+      |> Array.filter (canBeSolved [| (+); (*); (fun a b -> int64 $"{a}{b}") |])
+      |> Array.sumBy _.test
+
     Assert.Equal(expected, result)
