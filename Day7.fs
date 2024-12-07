@@ -4,10 +4,18 @@ open System.IO
 
 type Equation = { test: int64; operands: int64 array }
 
-let canBeSolved equation =
-  let operators = [| (+); (*) |]
+let canBeSolved operators equation =
+  let rec doSolve acc (remaining: int64 array) =
+    if Array.isEmpty remaining then
+      equation.test = acc
+    elif acc > equation.test then
+      false
+    else
+      operators
+      |> Array.exists (fun op -> doSolve (op acc remaining[0]) remaining[1..])
 
-  false
+  doSolve 0 equation.operands
+
 
 let parse filename =
   let parseLine (line: string) =
@@ -23,9 +31,14 @@ module Tests =
 
   [<Theory>]
   [<InlineData("Inputs/Day7/test.txt", 3749)>]
-  [<InlineData("Inputs/Day7/input.txt", -1)>]
+  [<InlineData("Inputs/Day7/input.txt", 1545311493300L)>]
   let ``Part 1: Total bridge calibrations`` (filename: string, expected: int64) =
-    let result = filename |> parse |> Array.filter canBeSolved |> Array.sumBy _.test
+    let result =
+      filename
+      |> parse
+      |> Array.filter (canBeSolved [| (+); (*) |])
+      |> Array.sumBy _.test
+
     Assert.Equal(expected, result)
 
   [<Theory>]
