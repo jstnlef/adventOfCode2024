@@ -12,20 +12,31 @@ type Antennae =
 let isInbounds width height (x, y) =
   x >= 0 && x < width && y >= 0 && y < height
 
-let countAntinodes (antennae: Antennae) : int =
-  let findAntinodesForAntennaPair ((x1, y1), (x2, y2)) =
-    let v = Vector2d.mul 2 (x2 - x1, y2 - y1)
-    Vector2d.add (x1, y1) v
+let findAntinode width height ((x1, y1), (x2, y2)) =
+  let v = Vector2d.mul 2 (x2 - x1, y2 - y1)
+  [ Vector2d.add (x1, y1) v ] |> Seq.filter (isInbounds width height)
 
-  let findAntinodesForSignal (kvp: KeyValuePair<char, Set<int * int>>) =
-    let antennaeForSignal = kvp.Value
+let findAntinodesWithHarmonics width height ((x1, y1), (x2, y2)) =
+  let v = (x2 - x1, y2 - y1)
 
+  seq {
+    let mutable antinode = (x1, y1)
+
+    while isInbounds width height antinode do
+      yield antinode
+      antinode <- Vector2d.add antinode v
+  }
+
+let countAntinodes findAntinodes antennae =
+  let findAntinodesForSignal antennaeForSignal =
     Seq.allPairs antennaeForSignal antennaeForSignal
     |> Seq.filter (fun (a, b) -> a <> b)
-    |> Seq.map findAntinodesForAntennaPair
-    |> Seq.filter (isInbounds antennae.width antennae.height)
+    |> Seq.collect (findAntinodes antennae.width antennae.height)
 
-  antennae.antennae |> Seq.collect findAntinodesForSignal |> Set |> Set.count
+  antennae.antennae.Values
+  |> Seq.collect findAntinodesForSignal
+  |> Set
+  |> Set.count
 
 let parse filename =
   let antennae = Dictionary<char, Set<int * int>>()
@@ -50,12 +61,12 @@ module Tests =
   [<InlineData("Inputs/Day8/test.txt", 14)>]
   [<InlineData("Inputs/Day8/input.txt", 254)>]
   let ``Part 1: Number of antinode locations`` (filename: string, expected: int) =
-    let result = filename |> parse |> countAntinodes
+    let result = filename |> parse |> countAntinodes findAntinode
     Assert.Equal(expected, result)
 
   [<Theory>]
-  [<InlineData("Inputs/Day8/test.txt", -1)>]
-  [<InlineData("Inputs/Day8/input.txt", -1)>]
-  let ``Part 2`` (filename: string, expected: int) =
-    let result = 0
+  [<InlineData("Inputs/Day8/test.txt", 34)>]
+  [<InlineData("Inputs/Day8/input.txt", 951)>]
+  let ``Part 2: Number of antinode locations with resonant harmonics`` (filename: string, expected: int) =
+    let result = filename |> parse |> countAntinodes findAntinodesWithHarmonics
     Assert.Equal(expected, result)
