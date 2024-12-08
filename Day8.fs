@@ -13,18 +13,22 @@ let isInbounds width height (x, y) =
   x >= 0 && x < width && y >= 0 && y < height
 
 let findAntinode width height ((x1, y1), (x2, y2)) =
-  let v = Vector2d.mul 2 (x2 - x1, y2 - y1)
-  [ Vector2d.add (x1, y1) v ] |> Seq.filter (isInbounds width height)
+  seq {
+    let delta = x2 - x1, y2 - y1
+    let antinode = Vector2d.add (x2, y2) delta
+
+    if isInbounds width height antinode then
+      yield antinode
+  }
 
 let findAntinodesWithHarmonics width height ((x1, y1), (x2, y2)) =
-  let v = (x2 - x1, y2 - y1)
-
   seq {
-    let mutable antinode = (x1, y1)
+    let delta = x2 - x1, y2 - y1
+    let mutable antinode = x1, y1
 
     while isInbounds width height antinode do
       yield antinode
-      antinode <- Vector2d.add antinode v
+      antinode <- Vector2d.add antinode delta
   }
 
 let countAntinodes findAntinodes antennae =
@@ -35,8 +39,8 @@ let countAntinodes findAntinodes antennae =
 
   antennae.antennae.Values
   |> Seq.collect findAntinodesForSignal
-  |> Set
-  |> Set.count
+  |> Seq.distinct
+  |> Seq.length
 
 let parse filename =
   let antennae = Dictionary<char, Set<int * int>>()
