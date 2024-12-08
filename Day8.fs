@@ -5,7 +5,7 @@ open System.IO
 open Common
 
 type Antennae =
-  { antennae: Dictionary<char, Set<int * int>>
+  { antennae: Dictionary<char, (int * int) list>
     width: int
     height: int }
 
@@ -43,16 +43,16 @@ let countAntinodes findAntinodes antennae =
   |> Seq.length
 
 let parse filename =
-  let antennae = Dictionary<char, Set<int * int>>()
+  let antennae = Dictionary<char, (int * int) list>()
   let lines = filename |> File.ReadLines |> Seq.toArray
 
   for y, s in lines |> Seq.indexed do
     for x, c in s |> Seq.indexed do
       if c <> '.' then
         if not (antennae.ContainsKey(c)) then
-          antennae[c] <- Set[(x, y)]
+          antennae[c] <- [ (x, y) ]
         else
-          antennae[c] <- antennae[c].Add((x, y))
+          antennae[c] <- (x, y) :: antennae[c]
 
   { antennae = antennae
     width = lines[0].Length
