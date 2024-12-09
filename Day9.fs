@@ -6,12 +6,17 @@ open System.IO
 type Disk = int16 array
 
 module Disk =
+  let checksum (disk: Disk) : int64 =
+    disk
+    |> Array.indexed
+    |> Array.sumBy (fun (i, id) -> if id > 0s then int64 i * int64 id else 0)
+
   let swap i j (disk: Disk) =
     let temp = disk[i]
     disk[i] <- disk[j]
     disk[j] <- temp
 
-  let defragment (disk: Disk) =
+  let blockDefragment (disk: Disk) =
     let mutable frontI = 0
     let mutable backI = disk.Length - 1
 
@@ -25,10 +30,7 @@ module Disk =
 
     disk
 
-  let checksum (disk: Disk) : int64 =
-    disk
-    |> Array.indexed
-    |> Array.sumBy (fun (i, id) -> if id > 0s then int64 i * int64 id else 0)
+  let fileDefragment (disk: Disk) = disk
 
 let parseDiskMap filename : Disk =
   let diskInput =
@@ -60,12 +62,12 @@ module Tests =
   [<InlineData("Inputs/Day9/test.txt", 1928)>]
   [<InlineData("Inputs/Day9/input.txt", 6291146824486L)>]
   let ``Part 1: Checksum after block defragmentation`` (filename: string, expected: int64) =
-    let result = filename |> parseDiskMap |> Disk.defragment |> Disk.checksum
+    let result = filename |> parseDiskMap |> Disk.blockDefragment |> Disk.checksum
     Assert.Equal(expected, result)
 
   [<Theory>]
   [<InlineData("Inputs/Day9/test.txt", 2858)>]
   [<InlineData("Inputs/Day9/input.txt", -1)>]
   let ``Part 2: Checksum after file deefragmentation`` (filename: string, expected: int64) =
-    let result = filename |> parseDiskMap |> Disk.defragment |> Disk.checksum
+    let result = filename |> parseDiskMap |> Disk.fileDefragment |> Disk.checksum
     Assert.Equal(expected, result)
