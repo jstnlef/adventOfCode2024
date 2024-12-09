@@ -1,15 +1,40 @@
 module Day9
 
+open System
 open System.IO
 
-let parseDiskMap filename =
-  let disk = filename |> File.ReadAllText
-  []
+type Disk = int8 array
 
 module Disk =
   let defragment disk = disk
 
-  let checksum disk = 0L
+  let checksum (disk: Disk) : int64 =
+    disk
+    |> Array.indexed
+    |> Array.sumBy (fun (i, id) -> if id > 0y then int64 i * int64 id else 0)
+
+let parseDiskMap filename : Disk =
+  let diskInput =
+    filename
+    |> File.ReadAllText
+    |> _.Trim()
+    |> Seq.map (fun c -> Int32.Parse([| c |]))
+
+  let size = diskInput |> Seq.sum
+  let disk = Array.init size (fun _ -> -1y)
+  let mutable i = 0
+  let mutable fileId = 0y
+
+  for inputIndex, segmentSize in diskInput |> Seq.indexed do
+    if inputIndex % 2 = 0 then
+      for j in 0 .. (segmentSize - 1) do
+        disk[i + j] <- fileId
+
+      fileId <- fileId + 1y
+
+    i <- i + segmentSize
+
+  disk
 
 module Tests =
   open Xunit
