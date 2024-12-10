@@ -35,9 +35,13 @@ module Disk =
   let fileDefragment (files: File list, freeSpace: Free array, disk: Disk) =
     let mutable free = freeSpace
 
-    let findAndMarkOpenSpace (_, _, size) : int option =
+    let moveFileToOpenSpace file =
+      let _, fileI, size = file
+
       let maybeOpen =
-        free |> Seq.indexed |> Seq.tryFind (fun (_, (_, freeSize)) -> size <= freeSize)
+        free
+        |> Seq.indexed
+        |> Seq.tryFind (fun (_, (freeI, freeSize)) -> size <= freeSize && freeI < fileI)
 
       match maybeOpen with
       | Some(i, (freeI, freeSize)) ->
@@ -45,16 +49,11 @@ module Disk =
           free[i] <- (freeI + size, freeSize - size)
         elif size = freeSize then
           free <- Array.removeAt i free
-        else
-          ()
 
-        Some freeI
-      | None -> None
-
-    for file in files do
-      match findAndMarkOpenSpace file with
-      | Some i -> moveFile file i disk
+        moveFile file freeI disk
       | None -> ()
+
+    files |> List.iter moveFileToOpenSpace
 
     disk
 
@@ -104,9 +103,7 @@ module Tests =
 
   [<Theory>]
   [<InlineData("Inputs/Day9/test.txt", 2858)>]
-  [<InlineData("Inputs/Day9/input.txt", -1)>]
+  [<InlineData("Inputs/Day9/input.txt", 6307279963620L)>]
   let ``Part 2: Checksum after file defragmentation`` (filename: string, expected: int64) =
     let result = filename |> parseDiskMap |> Disk.fileDefragment |> Disk.checksum
-
-    // 8468892803578 too high
     Assert.Equal(expected, result)
