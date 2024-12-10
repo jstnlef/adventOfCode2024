@@ -40,14 +40,15 @@ module Disk =
 
       let maybeOpen =
         free
-        |> Seq.indexed
-        |> Seq.tryFind (fun (_, (freeI, freeSize)) -> size <= freeSize && freeI < fileI)
+        |> Array.tryFindIndex (fun (freeI, freeSize) -> freeI < fileI && size <= freeSize)
 
       match maybeOpen with
-      | Some(i, (freeI, freeSize)) ->
+      | Some i ->
+        let freeI, freeSize = free[i]
+
         if size < freeSize then
           free[i] <- (freeI + size, freeSize - size)
-        elif size = freeSize then
+        else
           free <- Array.removeAt i free
 
         moveFile file freeI disk
