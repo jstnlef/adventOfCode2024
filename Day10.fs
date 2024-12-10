@@ -10,10 +10,12 @@ type TopographicMap =
     height: int }
 
 module TopographicMap =
+  let elevation map (x, y) = map.map[y][x]
+
   let inbounds map (x, y) =
     x >= 0 && x < map.width && y >= 0 && y < map.height
 
-  let neighbors map (x, y) =
+  let neighbors map elevation (x, y) =
     seq {
       yield 1, 0
       yield 0, 1
@@ -21,34 +23,32 @@ module TopographicMap =
       yield 0, -1
     }
     |> Seq.map (fun (dx, dy) -> x + dx, y + dy)
-    |> Seq.filter (inbounds map)
+    |> Seq.filter (fun (nx, ny) -> inbounds map (nx, ny) && map.map[ny][nx] = elevation)
 
 let rec countTrailheads map =
-  let rec findNumberOfTrails nines elevation node =
-    let x, y = node
-
-    if elevation = 9 && map.map[y][x] = 9 then
-      Set.add (x, y) nines
+  let rec findReachableNines nines elevation pos =
+    if TopographicMap.elevation map pos = 9 then
+      Set.add pos nines
     else
-      node
-      |> TopographicMap.neighbors map
-      |> Seq.filter (fun (x, y) -> map.map[y][x] = elevation + 1)
-      |> Seq.collect (findNumberOfTrails nines (elevation + 1))
+      let nextElevation = elevation + 1
+
+      pos
+      |> TopographicMap.neighbors map nextElevation
+      |> Seq.collect (findReachableNines nines nextElevation)
       |> Set
 
-  map.trailheads |> List.sumBy ((findNumberOfTrails Set.empty 0) >> Set.count)
+  map.trailheads |> List.sumBy ((findReachableNines Set.empty 0) >> Set.count)
 
 let rec countRatingsForTrailheads map =
-  let rec findNumberOfTrails nines elevation node =
-    let x, y = node
-
-    if elevation = 9 && map.map[y][x] = 9 then
+  let rec findNumberOfTrails nines elevation pos =
+    if TopographicMap.elevation map pos = 9 then
       1
     else
-      node
-      |> TopographicMap.neighbors map
-      |> Seq.filter (fun (x, y) -> map.map[y][x] = elevation + 1)
-      |> Seq.sumBy (findNumberOfTrails nines (elevation + 1))
+      let nextElevation = elevation + 1
+
+      pos
+      |> TopographicMap.neighbors map nextElevation
+      |> Seq.sumBy (findNumberOfTrails nines nextElevation)
 
   map.trailheads |> List.sumBy (findNumberOfTrails Set.empty 0)
 
