@@ -13,9 +13,9 @@ module Disk =
     |> Array.indexed
     |> Array.sumBy (fun (i, id) -> if id > 0s then int64 i * int64 id else 0)
 
-  let moveBlock i j (disk: Disk) =
-    disk[i] <- disk[j]
-    disk[j] <- -1s
+  let moveBlock sourceI targetI (disk: Disk) =
+    disk[targetI] <- disk[sourceI]
+    disk[sourceI] <- -1s
 
   let blockDefragment (disk: Disk) =
     let mutable frontI = 0
@@ -24,7 +24,7 @@ module Disk =
     while frontI < backI do
       if disk[frontI] >= 0s then frontI <- frontI + 1
       elif disk[backI] < 0s then backI <- backI - 1
-      else moveBlock frontI backI disk
+      else moveBlock backI frontI disk
 
     disk
 
@@ -37,9 +37,7 @@ module Disk =
 
     let findAndMarkOpenSpace (_, _, size) : int option =
       let maybeOpen =
-        freeSpace
-        |> Seq.indexed
-        |> Seq.tryFind (fun (_, (_, freeSize)) -> size <= freeSize)
+        free |> Seq.indexed |> Seq.tryFind (fun (_, (_, freeSize)) -> size <= freeSize)
 
       match maybeOpen with
       | Some(i, (freeI, freeSize)) ->
@@ -109,4 +107,6 @@ module Tests =
   [<InlineData("Inputs/Day9/input.txt", -1)>]
   let ``Part 2: Checksum after file defragmentation`` (filename: string, expected: int64) =
     let result = filename |> parseDiskMap |> Disk.fileDefragment |> Disk.checksum
+
+    // 8468892803578 too high
     Assert.Equal(expected, result)
