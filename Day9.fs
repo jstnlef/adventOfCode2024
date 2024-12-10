@@ -47,7 +47,7 @@ module Disk =
         let freeI, freeSize = free[i]
 
         if size < freeSize then
-          free[i] <- (freeI + size, freeSize - size)
+          free[i] <- freeI + size, freeSize - size
         else
           free <- Array.removeAt i free
 
