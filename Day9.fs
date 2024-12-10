@@ -1,6 +1,7 @@
 module Day9
 
 open System
+open System.Collections.Generic
 open System.IO
 
 type Disk = int16 array
@@ -32,27 +33,29 @@ module Disk =
     for n in 0 .. (size - 1) do
       moveBlock (sourceI + n) (targetI + n) disk
 
-  let fileDefragment (files: File list, freeSpace: Free array, disk: Disk) =
-    let mutable free = freeSpace
-
+  let fileDefragment (files: File list, freeSpace: Map<int, SortedSet<int>>, disk: Disk) =
     let moveFileToOpenSpace file =
-      let _, fileI, size = file
+      let _, fileI, fileSize = file
 
       let maybeOpen =
-        free
-        |> Array.tryFindIndex (fun (freeI, freeSize) -> freeI < fileI && size <= freeSize)
+        seq { fileSize..9 }
+        |> Seq.map (fun size -> size, (freeSpace[size] |> Seq.tryHead))
+        |> Seq.filter (fun (_, maybeFreeI) ->
+          match maybeFreeI with
+          | Some(freeI) -> freeI < fileI
+          | None -> false)
+        |> Seq.sortBy snd
+        |> Seq.tryHead
 
       match maybeOpen with
-      | Some i ->
-        let freeI, freeSize = free[i]
+      | Some(freeSize, Some(freeI)) ->
+        freeSpace[freeSize].Remove(freeI) |> ignore
 
-        if size < freeSize then
-          free[i] <- freeI + size, freeSize - size
-        else
-          free <- Array.removeAt i free
+        if fileSize < freeSize then
+          freeSpace[freeSize - fileSize].Add(freeI + fileSize) |> ignore
 
         moveFile file freeI disk
-      | None -> ()
+      | _ -> ()
 
     files |> List.iter moveFileToOpenSpace
 
@@ -71,7 +74,7 @@ let parseDiskMap filename =
   let mutable fileId = 0s
 
   let mutable files = []
-  let mutable free = []
+  let free = Array.init 9 (fun size -> size + 1, SortedSet()) |> Map
 
   for inputIndex, segmentSize in diskInput |> Seq.indexed do
     if inputIndex % 2 = 0 then
@@ -81,11 +84,11 @@ let parseDiskMap filename =
       files <- (fileId, i, segmentSize) :: files
       fileId <- fileId + 1s
     else if segmentSize > 0 then
-      free <- (i, segmentSize) :: free
+      free[segmentSize].Add(i) |> ignore
 
     i <- i + segmentSize
 
-  files, free |> List.rev |> List.toArray, disk
+  files, free, disk
 
 module Tests =
   open Xunit
