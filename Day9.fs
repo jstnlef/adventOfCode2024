@@ -38,17 +38,17 @@ module Disk =
       let _, fileI, fileSize = file
 
       let maybeOpen =
-        seq { fileSize..9 }
-        |> Seq.map (fun size -> size, (freeSpace[size] |> Seq.tryHead))
-        |> Seq.filter (fun (_, maybeFreeI) ->
-          match maybeFreeI with
-          | Some(freeI) -> freeI < fileI
-          | None -> false)
-        |> Seq.sortBy snd
+        seq {
+          for size in fileSize..9 do
+            match freeSpace[size] |> Seq.tryHead with
+            | Some(freeI) when freeI < fileI -> yield freeI, size
+            | _ -> ()
+        }
+        |> Seq.sort
         |> Seq.tryHead
 
       match maybeOpen with
-      | Some(freeSize, Some(freeI)) ->
+      | Some(freeI, freeSize) ->
         freeSpace[freeSize].Remove(freeI) |> ignore
 
         if fileSize < freeSize then
