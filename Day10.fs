@@ -9,11 +9,11 @@ type TopographicMap =
     width: int
     height: int }
 
-let rec countTrailheads map =
-  let inbounds (x, y) =
+module TopographicMap =
+  let inbounds map (x, y) =
     x >= 0 && x < map.width && y >= 0 && y < map.height
 
-  let neighbors (x, y) =
+  let neighbors map (x, y) =
     seq {
       yield 1, 0
       yield 0, 1
@@ -21,8 +21,9 @@ let rec countTrailheads map =
       yield 0, -1
     }
     |> Seq.map (fun (dx, dy) -> x + dx, y + dy)
-    |> Seq.filter inbounds
+    |> Seq.filter (inbounds map)
 
+let rec countTrailheads map =
   let rec findNumberOfTrails nines elevation node =
     let x, y = node
 
@@ -30,12 +31,26 @@ let rec countTrailheads map =
       Set.add (x, y) nines
     else
       node
-      |> neighbors
+      |> TopographicMap.neighbors map
       |> Seq.filter (fun (x, y) -> map.map[y][x] = elevation + 1)
       |> Seq.collect (findNumberOfTrails nines (elevation + 1))
       |> Set
 
   map.trailheads |> List.sumBy ((findNumberOfTrails Set.empty 0) >> Set.count)
+
+let rec countRatingsForTrailheads map =
+  let rec findNumberOfTrails nines elevation node =
+    let x, y = node
+
+    if elevation = 9 && map.map[y][x] = 9 then
+      1
+    else
+      node
+      |> TopographicMap.neighbors map
+      |> Seq.filter (fun (x, y) -> map.map[y][x] = elevation + 1)
+      |> Seq.sumBy (findNumberOfTrails nines (elevation + 1))
+
+  map.trailheads |> List.sumBy (findNumberOfTrails Set.empty 0)
 
 let parse filename : TopographicMap =
   let map =
@@ -66,8 +81,8 @@ module Tests =
     Assert.Equal(expected, result)
 
   [<Theory>]
-  [<InlineData("Inputs/Day10/test.txt", -1)>]
-  [<InlineData("Inputs/Day10/input.txt", -1)>]
-  let ``Part 2`` (filename: string, expected: int) =
-    let result = 0
+  [<InlineData("Inputs/Day10/test.txt", 81)>]
+  [<InlineData("Inputs/Day10/input.txt", 1062)>]
+  let ``Part 2: Sum of the ratings of all trailheads`` (filename: string, expected: int) =
+    let result = filename |> parse |> countRatingsForTrailheads
     Assert.Equal(expected, result)
