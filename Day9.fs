@@ -34,20 +34,24 @@ module Disk =
       moveBlock (sourceI + n) (targetI + n) disk
 
   let fileDefragment (files: File list, freeSpace: Map<int, SortedSet<int>>, disk: Disk) =
+    let findOpenSpaceForFile fileI fileSize =
+      let mutable min = None
+
+      for size in fileSize..9 do
+        match freeSpace[size] |> Seq.tryHead with
+        | Some(freeI) when freeI < fileI ->
+          match min with
+          | None -> min <- Some(freeI, size)
+          | Some m when (freeI, size) < m -> min <- Some(freeI, size)
+          | _ -> ()
+        | _ -> ()
+
+      min
+
     let moveFileToOpenSpace file =
       let _, fileI, fileSize = file
 
-      let maybeOpen =
-        seq {
-          for size in fileSize..9 do
-            match freeSpace[size] |> Seq.tryHead with
-            | Some(freeI) when freeI < fileI -> yield freeI, size
-            | _ -> ()
-        }
-        |> Seq.sort
-        |> Seq.tryHead
-
-      match maybeOpen with
+      match findOpenSpaceForFile fileI fileSize with
       | Some(freeI, freeSize) ->
         freeSpace[freeSize].Remove(freeI) |> ignore
 
