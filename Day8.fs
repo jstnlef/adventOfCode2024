@@ -9,15 +9,12 @@ type Antennae =
     width: int
     height: int }
 
-let isInbounds width height (x, y) =
-  x >= 0 && x < width && y >= 0 && y < height
-
 let findAntinode width height ((x1, y1), (x2, y2)) =
   seq {
     let delta = x2 - x1, y2 - y1
     let antinode = Vector2d.add (x2, y2) delta
 
-    if isInbounds width height antinode then
+    if Grid.inbounds width height antinode then
       yield antinode
   }
 
@@ -26,7 +23,7 @@ let findAntinodesWithHarmonics width height ((x1, y1), (x2, y2)) =
     let delta = x2 - x1, y2 - y1
     let mutable antinode = x1, y1
 
-    while isInbounds width height antinode do
+    while Grid.inbounds width height antinode do
       yield antinode
       antinode <- Vector2d.add antinode delta
   }
