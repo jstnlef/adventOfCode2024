@@ -10,34 +10,25 @@ type TopographicMap =
     width: int
     height: int }
 
-let rec countTrailheads map =
-  let rec findReachableNines nines elevation pos =
-    if Grid.get map.map pos = 9 then
-      Set.add pos nines
-    else
-      let nextElevation = elevation + 1
+let rec findReachableNines map elevation pos =
+  if Grid.get map pos = 9 then
+    [| pos |]
+  else
+    let nextElevation = elevation + 1
 
-      pos
-      |> Grid.cardinalNeighbors map.map
-      |> Seq.filter (fun newPos -> (Grid.get map.map newPos) = nextElevation)
-      |> Seq.collect (findReachableNines nines nextElevation)
-      |> Set
+    pos
+    |> Grid.cardinalNeighbors map
+    |> Array.filter (fun newPos -> (Grid.get map newPos) = nextElevation)
+    |> Array.collect (findReachableNines map nextElevation)
 
-  map.trailheads |> List.sumBy ((findReachableNines Set.empty 0) >> Set.count)
+let countFromTrailheads map transform =
+  map.trailheads |> List.map transform |> List.sumBy Array.length
 
-let rec countRatingsForTrailheads map =
-  let rec findNumberOfTrails elevation pos =
-    if Grid.get map.map pos = 9 then
-      1
-    else
-      let nextElevation = elevation + 1
+let countSummits map =
+  countFromTrailheads map ((findReachableNines map.map 0) >> Array.distinct)
 
-      pos
-      |> Grid.cardinalNeighbors map.map
-      |> Seq.filter (fun newPos -> (Grid.get map.map newPos) = nextElevation)
-      |> Seq.sumBy (findNumberOfTrails nextElevation)
-
-  map.trailheads |> List.sumBy (findNumberOfTrails 0)
+let countRatingsForTrailheads map =
+  countFromTrailheads map (findReachableNines map.map 0)
 
 let parse filename : TopographicMap =
   let map =
@@ -63,8 +54,8 @@ module Tests =
   [<Theory>]
   [<InlineData("Inputs/Day10/test.txt", 36)>]
   [<InlineData("Inputs/Day10/input.txt", 557)>]
-  let ``Part 1: Sum of scores of all trailheads`` (filename: string, expected: int) =
-    let result = filename |> parse |> countTrailheads
+  let ``Part 1: Sum of scores of all trailheads to summits`` (filename: string, expected: int) =
+    let result = filename |> parse |> countSummits
     Assert.Equal(expected, result)
 
   [<Theory>]
