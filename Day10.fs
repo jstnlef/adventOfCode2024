@@ -26,7 +26,7 @@ let rec countTrailheads map =
   map.trailheads |> List.sumBy ((findReachableNines Set.empty 0) >> Set.count)
 
 let rec countRatingsForTrailheads map =
-  let rec findNumberOfTrails nines elevation pos =
+  let rec findNumberOfTrails elevation pos =
     if Grid.get map.map pos = 9 then
       1
     else
@@ -35,9 +35,9 @@ let rec countRatingsForTrailheads map =
       pos
       |> Grid.cardinalNeighbors map.map
       |> Seq.filter (fun newPos -> (Grid.get map.map newPos) = nextElevation)
-      |> Seq.sumBy (findNumberOfTrails nines nextElevation)
+      |> Seq.sumBy (findNumberOfTrails nextElevation)
 
-  map.trailheads |> List.sumBy (findNumberOfTrails Set.empty 0)
+  map.trailheads |> List.sumBy (findNumberOfTrails 0)
 
 let parse filename : TopographicMap =
   let map =
