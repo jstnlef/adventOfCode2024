@@ -2,6 +2,7 @@ module Day10
 
 open System
 open System.IO
+open Common
 
 type TopographicMap =
   { map: int array array
@@ -9,31 +10,16 @@ type TopographicMap =
     width: int
     height: int }
 
-module TopographicMap =
-  let elevation map (x, y) = map.map[y][x]
-
-  let inbounds map (x, y) =
-    x >= 0 && x < map.width && y >= 0 && y < map.height
-
-  let neighbors map elevation (x, y) =
-    seq {
-      yield 1, 0
-      yield 0, 1
-      yield -1, 0
-      yield 0, -1
-    }
-    |> Seq.map (fun (dx, dy) -> x + dx, y + dy)
-    |> Seq.filter (fun (nx, ny) -> inbounds map (nx, ny) && map.map[ny][nx] = elevation)
-
 let rec countTrailheads map =
   let rec findReachableNines nines elevation pos =
-    if TopographicMap.elevation map pos = 9 then
+    if Grid.get map.map pos = 9 then
       Set.add pos nines
     else
       let nextElevation = elevation + 1
 
       pos
-      |> TopographicMap.neighbors map nextElevation
+      |> Grid.cardinalNeighbors map.map
+      |> Seq.filter (fun newPos -> (Grid.get map.map newPos) = nextElevation)
       |> Seq.collect (findReachableNines nines nextElevation)
       |> Set
 
@@ -41,13 +27,14 @@ let rec countTrailheads map =
 
 let rec countRatingsForTrailheads map =
   let rec findNumberOfTrails nines elevation pos =
-    if TopographicMap.elevation map pos = 9 then
+    if Grid.get map.map pos = 9 then
       1
     else
       let nextElevation = elevation + 1
 
       pos
-      |> TopographicMap.neighbors map nextElevation
+      |> Grid.cardinalNeighbors map.map
+      |> Seq.filter (fun newPos -> (Grid.get map.map newPos) = nextElevation)
       |> Seq.sumBy (findNumberOfTrails nines nextElevation)
 
   map.trailheads |> List.sumBy (findNumberOfTrails Set.empty 0)

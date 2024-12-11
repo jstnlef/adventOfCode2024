@@ -1,5 +1,7 @@
 module Common.Vector2d
 
+type Vector2d = int * int
+
 let add (x, y) (x2, y2) = x + x2, y + y2
 
 let mul scalar (x, y) = (scalar * x, scalar * y)
