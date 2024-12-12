@@ -4,20 +4,20 @@ open System
 open System.IO
 open Common
 
-let countStoneGeneration (recF: int -> int64 -> int64) blinks stone =
+let countStoneGeneration (memoizedCount: int -> int64 -> int64) blinks stone =
   if blinks = 0 then
     1L
   elif stone = 0L then
-    recF (blinks - 1) 1
+    memoizedCount (blinks - 1) 1
   elif (string stone).Length % 2 = 0 then
     let s = (string stone)
     let midpoint = s.Length / 2
     let l = Int64.Parse(s[.. midpoint - 1])
     let r = Int64.Parse(s[midpoint..])
 
-    (recF (blinks - 1) l) + (recF (blinks - 1) r)
+    (memoizedCount (blinks - 1) l) + (memoizedCount (blinks - 1) r)
   else
-    recF (blinks - 1) (stone * 2024L)
+    memoizedCount (blinks - 1) (stone * 2024L)
 
 let blink numBlinks stones =
   stones |> Array.sumBy (Functools.memoizeRec2 countStoneGeneration numBlinks)
