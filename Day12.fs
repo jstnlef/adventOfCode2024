@@ -16,7 +16,11 @@ module Region =
       |> Array.filter (fun d -> region.Contains(Vector2d.add d (x, y)))
       |> (fun neighbors -> 4 - neighbors.Length))
 
+  let sides region = 4
+
   let fencePrice region = area region * perimeter region
+
+  let bulkDiscountFencePrice region = area region * sides region
 
 let findRegions garden : Region seq =
   let seen = HashSet()
@@ -47,8 +51,8 @@ let findRegions garden : Region seq =
         yield findRegion pos
   }
 
-let calculateFencePrice garden =
-  garden |> findRegions |> Seq.sumBy Region.fencePrice
+let calculateFencePrice priceFunc garden =
+  garden |> findRegions |> Seq.sumBy priceFunc
 
 let parse filename =
   filename |> File.ReadAllLines |> Array.map _.ToCharArray()
@@ -61,12 +65,13 @@ module Tests =
   [<InlineData("Inputs/Day12/test2.txt", 1930)>]
   [<InlineData("Inputs/Day12/input.txt", 1400386)>]
   let ``Part 1: Total price of fencing in all regions`` (filename: string, expected: int) =
-    let result = filename |> parse |> calculateFencePrice
+    let result = filename |> parse |> calculateFencePrice Region.fencePrice
     Assert.Equal(expected, result)
 
   [<Theory>]
-  [<InlineData("Inputs/Day12/test.txt", -1)>]
+  [<InlineData("Inputs/Day12/test.txt", 80)>]
+  [<InlineData("Inputs/Day12/test2.txt", 1206)>]
   [<InlineData("Inputs/Day12/input.txt", -1)>]
-  let ``Part 2`` (filename: string, expected: int) =
-    let result = 0
+  let ``Part 2: Total price of fencing in all regions with bulk discount`` (filename: string, expected: int) =
+    let result = filename |> parse |> calculateFencePrice Region.bulkDiscountFencePrice
     Assert.Equal(expected, result)
