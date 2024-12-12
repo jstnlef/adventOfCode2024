@@ -14,10 +14,15 @@ let inbounds width height (x, y) =
 
 let get (grid: Grid<'a>) (x, y) = grid[y][x]
 
+let iter (grid: Grid<'a>) =
+  seq {
+    for y in 0 .. grid.Length - 1 do
+      for x in 0 .. grid[y].Length - 1 do
+        yield x, y
+  }
+
 let neighborsNoGrid vectors width height (x, y) =
-  vectors
-  |> Array.map (fun (dx, dy) -> x + dx, y + dy)
-  |> Array.filter (inbounds width height)
+  vectors |> Array.map (add (x, y)) |> Array.filter (inbounds width height)
 
 let neighbors vectors (grid: Grid<'a>) position =
   neighborsNoGrid vectors grid[0].Length grid.Length position
