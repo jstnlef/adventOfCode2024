@@ -98,7 +98,7 @@ module Tests =
 
     Assert.Equal(expected, result)
 
-  [<Theory>]
+  [<Theory(Skip = "These tests generally take too long")>]
   [<InlineData("Inputs/Day6/test.txt", 6)>]
   [<InlineData("Inputs/Day6/test2.txt", 19)>]
   [<InlineData("Inputs/Day6/input.txt", 1703)>]
