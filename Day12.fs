@@ -10,11 +10,12 @@ module Region =
   let area (region: Region) = region.Count
 
   let perimeter (region: Region) =
-    region
-    |> Seq.sumBy (fun (x, y) ->
+    let countOutsideEdges pos =
       Grid.cardinalVectors
-      |> Array.filter (fun d -> region.Contains(Vector2d.add d (x, y)))
-      |> (fun neighbors -> 4 - neighbors.Length))
+      |> Array.filter (fun d -> region.Contains(Vector2d.add d pos))
+      |> (fun neighbors -> 4 - neighbors.Length)
+
+    region |> Seq.sumBy countOutsideEdges
 
   let sides (region: Region) =
     // Using half vectors to represent the edges
@@ -24,32 +25,28 @@ module Region =
          (x + 0.5, y + 0.5)
          (x - 0.5, y + 0.5) |]
 
-    let possibleCorners =
-      region
-      |> Seq.collect (fun (x, y) -> cornersForPos (float x, float y))
-      |> HashSet
+    let numberOfSidesForCorner surrounding =
+      let hasAdjacent =
+        surrounding |> Array.map (fun (x, y) -> region.Contains((int x, int y)))
 
-    possibleCorners
-    |> Seq.map (fun (cx, cy) ->
-      cornersForPos (cx, cy)
-      |> Array.map (fun (x, y) -> region.Contains(int x, int y)))
-    |> Seq.sumBy (fun hasAdjacent ->
       let number = hasAdjacent |> Array.sumBy (fun ad -> if ad then 1 else 0)
 
-      if number = 1 then
+      if number = 1 || number = 3 then
         1
-      elif number = 2 then
-        if
-          hasAdjacent = [| true; false; true; false |]
-          || hasAdjacent = [| false; true; false; true |]
-        then
-          2
-        else
-          0
-      elif number = 3 then
-        1
+      elif
+        number = 2
+        && (hasAdjacent = [| true; false; true; false |]
+            || hasAdjacent = [| false; true; false; true |])
+      then
+        2
       else
-        0)
+        0
+
+    region
+    |> Seq.collect (fun (x, y) -> cornersForPos (float x, float y))
+    |> Seq.distinct
+    |> Seq.map cornersForPos
+    |> Seq.sumBy numberOfSidesForCorner
 
   let fencePrice region = area region * perimeter region
 
@@ -58,10 +55,10 @@ module Region =
 let findRegions garden : Region seq =
   let seen = HashSet()
 
-  let findRegion (x, y) =
-    let plantType = Grid.get garden (x, y)
+  let findRegion pos =
+    let plantType = Grid.get garden pos
     let region = HashSet()
-    let q = Queue([ (x, y) ])
+    let q = Queue([| pos |])
 
     while q.Count > 0 do
       let newPos = q.Dequeue()
