@@ -2,10 +2,8 @@ module Day13
 
 open System.IO
 open System.Text.RegularExpressions
+open Common
 open MathNet.Numerics.LinearAlgebra
-
-// 94a + 22b = 8400
-// 34a + 67b = 5400
 
 type ClawMachine =
   { a: int64 * int64
@@ -16,12 +14,10 @@ let fewestTokensToWinPrizes machines =
   let buttonPressesToPrize machine =
     let ax, ay = machine.a
     let bx, by = machine.b
-    let mutable px, py = machine.prize
-    px <- px + 10000000000000L
-    py <- py + 10000000000000L
-    let A = matrix [ [ double ax; double bx ]; [ double ay; double by ] ]
-    let b = vector [ double px; double py ]
-    let solved = A.Solve(b)
+    let px, py = machine.prize
+    let deltas = matrix [ [ double ax; double bx ]; [ double ay; double by ] ]
+    let prize = vector [ double px; double py ]
+    let solved = deltas.Solve(prize)
     let a, b = int64 (round solved[0]), int64 (round solved[1])
 
     if ax * a + bx * b = px && ay * a + by * b = py then
@@ -68,5 +64,12 @@ module Tests =
   let ``Part 2: Fewest tokens to spend to win all possible prizes plus 10_000_000_000_000``
     (filename: string, expected: int64)
     =
-    let result = filename |> parse |> fewestTokensToWinPrizes
+    let result =
+      filename
+      |> parse
+      |> Array.map (fun m ->
+        { m with
+            prize = Vector2d.addInt64 m.prize (10000000000000L, 10000000000000L) })
+      |> fewestTokensToWinPrizes
+
     Assert.Equal(expected, result)
