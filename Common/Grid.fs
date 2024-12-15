@@ -32,3 +32,11 @@ let neighbors vectors (grid: Grid<'a>) position =
 let cardinalNeighbors (grid: Grid<'a>) position = neighbors cardinalVectors grid position
 
 let eightWayNeighbors (grid: Grid<'a>) position = neighbors eightWayVectors grid position
+
+let print (grid: Grid<'a>) =
+  let s =
+    grid
+    |> Array.map (fun row -> row |> Array.map string |> String.concat "")
+    |> String.concat "\n"
+
+  printf $"%s{s}\n"
