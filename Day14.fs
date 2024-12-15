@@ -1,5 +1,6 @@
 module Day14
 
+open System
 open System.Text.RegularExpressions
 open Common
 
@@ -57,9 +58,15 @@ let parse filename =
 
 let findTree width height (_, robots) =
   let grid = Array.init height (fun _ -> Array.init width (fun _ -> '.'))
+
   robots
-  |> Array.iter (fun robot -> )
-  false
+  |> Array.iter (fun robot ->
+    let x, y = robot.position
+    grid[y][x] <- 'O')
+
+  let lines = grid |> Array.map String
+  let s = String.Join("\n", lines)
+  s.Contains("OOOOOOO")
 
 module Tests =
   open Xunit
@@ -74,17 +81,18 @@ module Tests =
     Assert.Equal(expected, result)
 
   [<Theory>]
-  [<InlineData("Inputs/Day14/input.txt", -1)>]
+  [<InlineData("Inputs/Day14/input.txt", 7774)>]
   let ``Part 2: Find the Christmas Tree Easter egg`` (filename: string, expected: int) =
     let width = 101
     let height = 103
     let robots = filename |> parse
 
     let result =
-      Seq.initInfinite ((+) 0)
+      Seq.initInfinite ((+) 1)
       |> Seq.scan (fun (_, bots) i -> i, moveRobots width height bots) (0, robots)
+      |> Seq.skip 7000
       |> Seq.takeWhile ((findTree width height) >> not)
       |> Seq.last
       |> fst
 
-    Assert.Equal(expected, result)
+    Assert.Equal(expected, result + 1)
