@@ -31,28 +31,29 @@ module Warehouse =
 
     let doMove warehouse (x, y) (nx, ny) =
       let obj = Grid.get warehouse.grid (x, y)
-      warehouse.grid[ny][nx] <- obj
-      warehouse.grid[y][x] <- '.'
+      let nextObj = Grid.get warehouse.grid (nx, ny)
 
-      if obj = '@' then
-        { warehouse with robot = nx, ny }
+      if nextObj = '.' then
+        warehouse.grid[ny][nx] <- obj
+        warehouse.grid[y][x] <- '.'
+
+        if obj = '@' then
+          { warehouse with robot = nx, ny }
+        else
+          warehouse
       else
         warehouse
 
     let nextObjPos = Vector2d.add objPos moveDir
     let nextObj = Grid.get warehouse.grid nextObjPos
 
-    if nextObj = '.' then
-      doMove warehouse objPos nextObjPos
+    if nextObj = '#' then
+      warehouse
     elif nextObj = 'O' then
       let warehouse = moveObject warehouse nextObjPos moveDir
-
-      if Grid.get warehouse.grid nextObjPos = '.' then
-        doMove warehouse objPos nextObjPos
-      else
-        warehouse
+      doMove warehouse objPos nextObjPos
     else
-      warehouse
+      doMove warehouse objPos nextObjPos
 
 let findRobot grid =
   grid |> Grid.iter |> Seq.find (fun pos -> Grid.get grid pos = '@')
@@ -88,8 +89,8 @@ module Tests =
 
   [<Theory>]
   [<InlineData("Inputs/Day15/smallTest.txt", -1)>]
-  [<InlineData("Inputs/Day15/biggerTest.txt", -1)>]
+  [<InlineData("Inputs/Day15/biggerTest.txt", 9021)>]
   [<InlineData("Inputs/Day15/input.txt", -1)>]
-  let ``Part 2`` (filename: string, expected: int) =
+  let ``Part 2: Sum of all bigger boxes' GPS coordinates`` (filename: string, expected: int) =
     let result = 0
     Assert.Equal(expected, result)
