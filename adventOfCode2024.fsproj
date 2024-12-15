@@ -18,6 +18,7 @@
     <Compile Include="Common\Vector2d.fs"/>
     <Compile Include="Common\Input.fs"/>
     <Compile Include="Common\Grid.fs"/>
+    <Compile Include="Common\Math.fs"/>
     <Compile Include="Day*.fs"/>
   </ItemGroup>
 

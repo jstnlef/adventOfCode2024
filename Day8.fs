@@ -14,7 +14,7 @@ let findAntinode width height ((x1, y1), (x2, y2)) =
     let delta = x2 - x1, y2 - y1
     let antinode = Vector2d.add (x2, y2) delta
 
-    if Grid.inbounds width height antinode then
+    if Grid.inBounds width height antinode then
       yield antinode
   }
 
@@ -23,7 +23,7 @@ let findAntinodesWithHarmonics width height ((x1, y1), (x2, y2)) =
     let delta = x2 - x1, y2 - y1
     let mutable antinode = x1, y1
 
-    while Grid.inbounds width height antinode do
+    while Grid.inBounds width height antinode do
       yield antinode
       antinode <- Vector2d.add antinode delta
   }

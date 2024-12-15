@@ -9,8 +9,10 @@ let cardinalVectors: Vector2d array = [| 1, 0; 0, 1; -1, 0; 0, -1 |]
 let eightWayVectors: Vector2d array =
   Array.append cardinalVectors [| 1, 1; -1, 1; -1, -1; 1, -1 |]
 
-let inbounds width height (x, y) =
-  x >= 0 && x < width && y >= 0 && y < height
+let inRegion minW maxW minH maxH (x, y) =
+  x >= minW && x < maxW && y >= minH && y < maxH
+
+let inBounds width height (x, y) = inRegion 0 width 0 height (x, y)
 
 let get (grid: Grid<'a>) (x, y) = grid[y][x]
 
@@ -22,7 +24,7 @@ let iter (grid: Grid<'a>) =
   }
 
 let neighborsNoGrid vectors width height (x, y) =
-  vectors |> Array.map (add (x, y)) |> Array.filter (inbounds width height)
+  vectors |> Array.map (add (x, y)) |> Array.filter (inBounds width height)
 
 let neighbors vectors (grid: Grid<'a>) position =
   neighborsNoGrid vectors grid[0].Length grid.Length position
