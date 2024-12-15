@@ -7,15 +7,18 @@ type Robot =
   { position: int * int
     velocity: int * int }
 
-let simulate seconds width height robots =
+let moveRobots width height robots =
   let moveBot robot =
     let x, y = Vector2d.add robot.position robot.velocity
 
     { robot with
         position = Math.modulo x width, Math.modulo y height }
 
+  robots |> Array.map moveBot
+
+let simulate seconds width height robots =
   seq { 0 .. seconds - 1 }
-  |> Seq.fold (fun bots _ -> bots |> Array.map moveBot) robots
+  |> Seq.fold (fun bots _ -> moveRobots width height bots) robots
 
 let safetyFactor width height robots =
   let midW = width / 2
@@ -36,7 +39,7 @@ let safetyFactor width height robots =
   robots
   |> Array.groupBy findQuadrant
   |> Array.filter (fun (i, _) -> i >= 0)
-  |> Array.map (fun grouped -> snd grouped |> Array.length)
+  |> Array.map (snd >> Array.length)
   |> Array.reduce (*)
 
 let robotReg = Regex("^p=(-?\d+),(-?\d+) v=(-?\d+),(-?\d+)$")
@@ -52,6 +55,12 @@ let parse filename =
 
   filename |> Input.parseByLine parseRobot |> Seq.toArray
 
+let findTree width height (_, robots) =
+  let grid = Array.init height (fun _ -> Array.init width (fun _ -> '.'))
+  robots
+  |> Array.iter (fun robot -> )
+  false
+
 module Tests =
   open Xunit
 
@@ -66,13 +75,16 @@ module Tests =
 
   [<Theory>]
   [<InlineData("Inputs/Day14/input.txt", -1)>]
-  let ``Part 2`` (filename: string, expected: int) =
+  let ``Part 2: Find the Christmas Tree Easter egg`` (filename: string, expected: int) =
     let width = 101
     let height = 103
     let robots = filename |> parse
 
-    // Seq.initInfinite id
-    // |>
+    let result =
+      Seq.initInfinite ((+) 0)
+      |> Seq.scan (fun (_, bots) i -> i, moveRobots width height bots) (0, robots)
+      |> Seq.takeWhile ((findTree width height) >> not)
+      |> Seq.last
+      |> fst
 
-    let result = 0
     Assert.Equal(expected, result)
