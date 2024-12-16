@@ -15,7 +15,7 @@ module Warehouse =
     warehouse.grid
     |> Grid.iter
     |> Seq.map (fun pos -> pos, (Grid.get warehouse.grid pos))
-    |> Seq.filter (fun (_, c) -> c = 'O')
+    |> Seq.filter (fun (_, c) -> c = 'O' || c = '[')
     |> Seq.map (fst >> gpsCoordinate)
 
   let direction c =
@@ -26,43 +26,85 @@ module Warehouse =
     | 'v' -> 0, 1
     | _ -> failwith "Not a valid direction"
 
-  let rec moveObject warehouse objPos moveDir =
-    // Grid.print warehouse.grid
-
-    let doMove warehouse (x, y) (nx, ny) =
-      let obj = Grid.get warehouse.grid (x, y)
+  let rec moveSmallBox warehouse (x, y) moveDir =
+    let doMove (x, y) (nx, ny) =
       let nextObj = Grid.get warehouse.grid (nx, ny)
 
       if nextObj = '.' then
-        warehouse.grid[ny][nx] <- obj
+        warehouse.grid[ny][nx] <- 'O'
         warehouse.grid[y][x] <- '.'
 
-        if obj = '@' then
-          { warehouse with robot = nx, ny }
-        else
-          warehouse
+    let nextPosition = Vector2d.add (x, y) moveDir
+    let nextObj = Grid.get warehouse.grid nextPosition
+
+    if nextObj = 'O' then
+      moveSmallBox warehouse nextPosition moveDir
+
+    doMove (x, y) nextPosition
+
+  let rec moveBigBox warehouse (x, y) moveDir = warehouse
+
+  let moveRobot warehouse moveDir =
+    // Grid.print warehouse.grid
+
+    let doMove (x, y) (nx, ny) =
+      let nextObj = Grid.get warehouse.grid (nx, ny)
+
+      if nextObj = '.' then
+        warehouse.grid[ny][nx] <- '@'
+        warehouse.grid[y][x] <- '.'
+        { warehouse with robot = nx, ny }
       else
         warehouse
 
-    let nextObjPos = Vector2d.add objPos moveDir
-    let nextObj = Grid.get warehouse.grid nextObjPos
+    let robotPosition = warehouse.robot
+    let nx, ny = Vector2d.add robotPosition moveDir
+    let nextObj = Grid.get warehouse.grid (nx, ny)
 
-    if nextObj = '#' then
-      warehouse
-    elif nextObj = 'O' then
-      let warehouse = moveObject warehouse nextObjPos moveDir
-      doMove warehouse objPos nextObjPos
-    else
-      doMove warehouse objPos nextObjPos
+    if nextObj = 'O' then
+      moveSmallBox warehouse (nx, ny) moveDir
+    elif nextObj = '[' then
+      moveBigBox warehouse (nx, ny) moveDir |> ignore
+    elif nextObj = ']' then
+      moveBigBox warehouse (nx - 1, ny) moveDir |> ignore
+
+    doMove robotPosition (nx, ny)
+
+  let expand warehouse =
+    let expandRow (row: char array) =
+      let newRow = Array.init (row.Length * 2) (fun _ -> '.')
+
+      for i, c in row |> Array.indexed do
+        let ni = 2 * i
+
+        match c with
+        | '#' ->
+          newRow[ni] <- '#'
+          newRow[ni + 1] <- '#'
+        | 'O' ->
+          newRow[ni] <- '['
+          newRow[ni + 1] <- ']'
+        | '@' -> newRow[ni] <- '@'
+        | _ -> ()
+
+      newRow
+
+    let x, y = warehouse.robot
+
+    { warehouse with
+        grid = warehouse.grid |> Array.map expandRow
+        robot = x * 2, y }
 
 let findRobot grid =
   grid |> Grid.iter |> Seq.find (fun pos -> Grid.get grid pos = '@')
 
 let simulateRobot warehouse =
   warehouse.moves
-  |> Array.fold
-    (fun warehouse move -> Warehouse.moveObject warehouse warehouse.robot (Warehouse.direction move))
-    warehouse
+  |> Array.fold (fun warehouse move -> Warehouse.moveRobot warehouse (Warehouse.direction move)) warehouse
+
+let simulateBigWarehouseRobot warehouse =
+  warehouse.moves
+  |> Array.fold (fun warehouse move -> Warehouse.moveRobot warehouse (Warehouse.direction move)) warehouse
 
 let parse filename =
   let text = filename |> File.ReadAllText
@@ -89,8 +131,16 @@ module Tests =
 
   [<Theory>]
   [<InlineData("Inputs/Day15/smallTest.txt", -1)>]
+  [<InlineData("Inputs/Day15/bigBoxSmallTest.txt", -1)>]
   [<InlineData("Inputs/Day15/biggerTest.txt", 9021)>]
   [<InlineData("Inputs/Day15/input.txt", -1)>]
   let ``Part 2: Sum of all bigger boxes' GPS coordinates`` (filename: string, expected: int) =
-    let result = 0
+    let result =
+      filename
+      |> parse
+      |> Warehouse.expand
+      |> simulateBigWarehouseRobot
+      |> Warehouse.boxGPSCoordinates
+      |> Seq.sum
+
     Assert.Equal(expected, result)
