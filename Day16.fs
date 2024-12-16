@@ -36,6 +36,8 @@ let findPathWithLowestScore maze =
 
   minCost
 
+let findNumberOfBestSeats maze = 0
+
 let parse filename =
   filename |> File.ReadAllLines |> Array.map _.ToCharArray()
 
@@ -51,8 +53,9 @@ module Tests =
     Assert.Equal(expected, result)
 
   [<Theory>]
-  [<InlineData("Inputs/Day16/test.txt", -1)>]
+  [<InlineData("Inputs/Day16/test.txt", 45)>]
+  [<InlineData("Inputs/Day16/test2.txt", 64)>]
   [<InlineData("Inputs/Day16/input.txt", -1)>]
-  let ``Part 2`` (filename: string, expected: int) =
-    let result = 0
+  let ``Part 2: Number of best seats`` (filename: string, expected: int) =
+    let result = filename |> parse |> findNumberOfBestSeats
     Assert.Equal(expected, result)
