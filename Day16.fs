@@ -1,5 +1,48 @@
 module Day16
 
+open System.Collections.Generic
+open System.IO
+open Common
+
+type Maze = char array array
+
+module Maze =
+  let find c maze =
+    maze |> Grid.iter |> Seq.find (fun pos -> Grid.get maze pos = c)
+
+let findPathWithLowestScore maze =
+  let startP = Maze.find 'S' maze
+  let seen = HashSet([ (startP, (0, 0)) ])
+  let queue = PriorityQueue()
+  queue.Enqueue((0, startP, None), 0)
+
+  let mutable found = 99999
+
+  while queue.Count > 0 do
+    let cost, pos, dir = queue.Dequeue()
+
+    for ndir in Grid.cardinalVectors do
+      let npos = Vector2d.add pos ndir
+      let c = Grid.get maze npos
+
+      let ncost =
+        match dir with
+        | Some previousDir when previousDir <> ndir -> cost + 1000
+        | _ -> cost + 1
+
+      if Grid.get maze npos = 'E' && ncost < found then
+        found <- ncost
+
+      if seen.Contains((npos, ndir)) |> not then
+        if c = '.' then
+          seen.Add((npos, ndir)) |> ignore
+          queue.Enqueue((ncost, npos, Some ndir), ncost)
+
+  found
+
+let parse filename =
+  filename |> File.ReadAllLines |> Array.map _.ToCharArray()
+
 module Tests =
   open Xunit
 
@@ -8,7 +51,7 @@ module Tests =
   [<InlineData("Inputs/Day16/test2.txt", 11048)>]
   [<InlineData("Inputs/Day16/input.txt", -1)>]
   let ``Part 1: Lowest score a Reindeer could receive`` (filename: string, expected: int) =
-    let result = 0
+    let result = filename |> parse |> findPathWithLowestScore
     Assert.Equal(expected, result)
 
   [<Theory>]
