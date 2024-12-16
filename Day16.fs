@@ -1,5 +1,6 @@
 module Day16
 
+open System
 open System.Collections.Generic
 open System.IO
 open Common
@@ -16,25 +17,24 @@ let findPathWithLowestScore maze =
   let queue = PriorityQueue()
   queue.Enqueue((0, startP, (1, 0)), 0)
 
-  let mutable found = 9999999
+  let mutable minCost = Int32.MaxValue
 
   while queue.Count > 0 do
     let cost, pos, dir = queue.Dequeue()
     seen.Add(pos) |> ignore
 
+    if Grid.get maze pos = 'E' && cost < minCost then
+      minCost <- cost
+
     for ndir in Grid.cardinalVectors do
       let npos = Vector2d.add pos ndir
       let c = Grid.get maze npos
 
-      let ncost = if dir <> ndir then cost + 1001 else cost + 1
-
-      if Grid.get maze npos = 'E' && ncost < found then
-        found <- ncost
-
-      if seen.Contains(npos) |> not && c = '.' then
+      if seen.Contains(npos) |> not && (c = '.' || c = 'E') then
+        let ncost = if dir <> ndir then cost + 1001 else cost + 1
         queue.Enqueue((ncost, npos, ndir), ncost)
 
-  found
+  minCost
 
 let parse filename =
   filename |> File.ReadAllLines |> Array.map _.ToCharArray()
