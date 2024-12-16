@@ -42,9 +42,31 @@ module Warehouse =
 
     doMove (x, y) nextPosition
 
-  let rec moveBigBox warehouse (x, y) moveDir = warehouse
+  let rec moveBigBox warehouse (lx, ly) move =
+    let doMove leftP rightP dir =
+      let nlx, nly = Vector2d.add leftP dir
+      let nrx, nry = Vector2d.add rightP dir
+      let nextObjL = Grid.get warehouse.grid (nlx, nly)
+      let nextObjR = Grid.get warehouse.grid (nrx, nry)
+      // if nextObjL
+      ()
 
-  let moveRobot warehouse moveDir =
+    let rx, ry = (lx + 1, ly)
+
+    ()
+
+  //
+  // let nx, ny = Vector2d.add (x, y) moveDir
+  // let nextObj = Grid.get warehouse.grid (nx, ny)
+  //
+  // if nextObj = '[' then
+  //   moveBigBox warehouse (nx, ny) (nx + 1, ny) moveDir
+  // elif nextObj = ']' then
+  //   moveBigBox warehouse (nx - 1, ny) (nx, ny) moveDir
+  //
+  // doMove (x, y) (nx, ny)
+
+  let moveRobot warehouse move =
     // Grid.print warehouse.grid
 
     let doMove (x, y) (nx, ny) =
@@ -58,15 +80,16 @@ module Warehouse =
         warehouse
 
     let robotPosition = warehouse.robot
+    let moveDir = direction move
     let nx, ny = Vector2d.add robotPosition moveDir
     let nextObj = Grid.get warehouse.grid (nx, ny)
 
     if nextObj = 'O' then
       moveSmallBox warehouse (nx, ny) moveDir
     elif nextObj = '[' then
-      moveBigBox warehouse (nx, ny) moveDir |> ignore
+      moveBigBox warehouse (nx, ny) move
     elif nextObj = ']' then
-      moveBigBox warehouse (nx - 1, ny) moveDir |> ignore
+      moveBigBox warehouse (nx - 1, ny) move
 
     doMove robotPosition (nx, ny)
 
@@ -100,11 +123,7 @@ let findRobot grid =
 
 let simulateRobot warehouse =
   warehouse.moves
-  |> Array.fold (fun warehouse move -> Warehouse.moveRobot warehouse (Warehouse.direction move)) warehouse
-
-let simulateBigWarehouseRobot warehouse =
-  warehouse.moves
-  |> Array.fold (fun warehouse move -> Warehouse.moveRobot warehouse (Warehouse.direction move)) warehouse
+  |> Array.fold (fun warehouse move -> Warehouse.moveRobot warehouse move) warehouse
 
 let parse filename =
   let text = filename |> File.ReadAllText
@@ -139,7 +158,7 @@ module Tests =
       filename
       |> parse
       |> Warehouse.expand
-      |> simulateBigWarehouseRobot
+      |> simulateRobot
       |> Warehouse.boxGPSCoordinates
       |> Seq.sum
 
