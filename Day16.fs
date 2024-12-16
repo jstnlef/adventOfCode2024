@@ -12,31 +12,27 @@ module Maze =
 
 let findPathWithLowestScore maze =
   let startP = Maze.find 'S' maze
-  let seen = HashSet([ (startP, (0, 0)) ])
+  let seen = HashSet([ startP ])
   let queue = PriorityQueue()
-  queue.Enqueue((0, startP, None), 0)
+  queue.Enqueue((0, startP, (1, 0)), 0)
 
-  let mutable found = 99999
+  let mutable found = 9999999
 
   while queue.Count > 0 do
     let cost, pos, dir = queue.Dequeue()
+    seen.Add(pos) |> ignore
 
     for ndir in Grid.cardinalVectors do
       let npos = Vector2d.add pos ndir
       let c = Grid.get maze npos
 
-      let ncost =
-        match dir with
-        | Some previousDir when previousDir <> ndir -> cost + 1000
-        | _ -> cost + 1
+      let ncost = if dir <> ndir then cost + 1001 else cost + 1
 
       if Grid.get maze npos = 'E' && ncost < found then
         found <- ncost
 
-      if seen.Contains((npos, ndir)) |> not then
-        if c = '.' then
-          seen.Add((npos, ndir)) |> ignore
-          queue.Enqueue((ncost, npos, Some ndir), ncost)
+      if seen.Contains(npos) |> not && c = '.' then
+        queue.Enqueue((ncost, npos, ndir), ncost)
 
   found
 
@@ -49,7 +45,7 @@ module Tests =
   [<Theory>]
   [<InlineData("Inputs/Day16/test.txt", 7036)>]
   [<InlineData("Inputs/Day16/test2.txt", 11048)>]
-  [<InlineData("Inputs/Day16/input.txt", -1)>]
+  [<InlineData("Inputs/Day16/input.txt", 102460)>]
   let ``Part 1: Lowest score a Reindeer could receive`` (filename: string, expected: int) =
     let result = filename |> parse |> findPathWithLowestScore
     Assert.Equal(expected, result)
