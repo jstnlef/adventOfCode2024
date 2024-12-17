@@ -105,8 +105,8 @@ module Tests =
     Assert.Equal(expected, result)
 
   [<Theory>]
-  [<InlineData("Inputs/Day17/test.txt", -1)>]
+  [<InlineData("Inputs/Day17/part2Test.txt", 117440)>]
   [<InlineData("Inputs/Day17/input.txt", -1)>]
-  let ``Part 2`` (filename: string, expected: int) =
+  let ``Part 2: Lowest initial value of reg A to have program output itself`` (filename: string, expected: int) =
     let result = 0
     Assert.Equal(expected, result)
