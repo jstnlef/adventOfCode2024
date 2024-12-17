@@ -23,6 +23,9 @@ let iter (grid: Grid<'a>) =
         yield x, y
   }
 
+let find (grid: Grid<'a>) v =
+  grid |> iter |> Seq.find (fun pos -> get grid pos = v)
+
 let neighborsNoGrid vectors width height (x, y) =
   vectors |> Array.map (add (x, y)) |> Array.filter (inBounds width height)
 

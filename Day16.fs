@@ -7,20 +7,17 @@ open Common
 
 type Maze = char array array
 
-module Maze =
-  let find c maze =
-    maze |> Grid.iter |> Seq.find (fun pos -> Grid.get maze pos = c)
-
 let findPathWithLowestScore maze =
-  let startP = Maze.find 'S' maze
+  let startP = Grid.find maze 'S'
   let seen = HashSet([ startP ])
-  let queue = PriorityQueue()
-  queue.Enqueue((0, startP, (1, 0)), 0)
+  let queue = SortedSet([ (0, startP, (1, 0)) ])
 
   let mutable minCost = Int32.MaxValue
 
-  while queue.Count > 0 do
-    let cost, pos, dir = queue.Dequeue()
+  while (queue.Count > 0) && (minCost = Int32.MaxValue) do
+    let v = queue.Min
+    queue.Remove(v) |> ignore
+    let cost, pos, dir = v
     seen.Add(pos) |> ignore
 
     if Grid.get maze pos = 'E' && cost < minCost then
@@ -32,11 +29,46 @@ let findPathWithLowestScore maze =
 
       if seen.Contains(npos) |> not && (c = '.' || c = 'E') then
         let ncost = if dir <> ndir then cost + 1001 else cost + 1
-        queue.Enqueue((ncost, npos, ndir), ncost)
+        queue.Add((ncost, npos, ndir)) |> ignore
 
   minCost
 
-let findNumberOfBestSeats maze = 0
+let findNumberOfBestSeats maze =
+  let startP = Grid.find maze 'S'
+  let seen = HashSet([ (startP, (1, 0)) ])
+  let queue = SortedSet([ (0, startP, (1, 0)) ])
+  let backtrack = Dictionary()
+
+  while (queue.Count > 0) do
+    let v = queue.Min
+    queue.Remove(v) |> ignore
+    let cost, pos, dir = v
+    seen.Add((pos, dir)) |> ignore
+
+    if Grid.get maze pos = 'E' then
+      // minCost <- cost
+      ()
+
+    for ndir in Grid.cardinalVectors do
+      let npos = Vector2d.add pos ndir
+      let c = Grid.get maze npos
+
+      if seen.Contains((npos, ndir)) |> not && (c = '.' || c = 'E') then
+        let ncost = if dir <> ndir then cost + 1001 else cost + 1
+
+        let hasValue, positions = backtrack.TryGetValue(npos)
+
+        if not hasValue then
+          backtrack[npos] <- [ cost, pos ]
+        elif ncost < (positions.Head |> fst) then
+          backtrack[npos] <- [ cost, pos ]
+        elif ncost = (positions.Head |> fst) then
+          backtrack[npos] <- (cost, pos) :: positions
+
+        queue.Add((ncost, npos, ndir)) |> ignore
+
+
+  0
 
 let parse filename =
   filename |> File.ReadAllLines |> Array.map _.ToCharArray()
