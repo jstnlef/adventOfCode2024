@@ -41,7 +41,7 @@ let runProgram computer =
       match opcode with
       | OpCode.Adv ->
         { computer with
-            Computer.cpu.a = cpu.a / (pown 2 (comboOperand operand))
+            Computer.cpu.a = cpu.a >>> (comboOperand operand)
             Computer.cpu.ip = cpu.ip + 2 }
       | OpCode.Bxl ->
         { computer with
@@ -49,7 +49,7 @@ let runProgram computer =
             Computer.cpu.ip = cpu.ip + 2 }
       | OpCode.Bst ->
         { computer with
-            Computer.cpu.b = (comboOperand operand % 8)
+            Computer.cpu.b = comboOperand operand % 8
             Computer.cpu.ip = cpu.ip + 2 }
       | OpCode.Jnz ->
         { computer with
@@ -64,11 +64,11 @@ let runProgram computer =
             Computer.cpu.ip = cpu.ip + 2 }
       | OpCode.Bdv ->
         { computer with
-            Computer.cpu.b = cpu.a / (pown 2 (comboOperand operand))
+            Computer.cpu.b = cpu.a >>> (comboOperand operand)
             Computer.cpu.ip = cpu.ip + 2 }
       | OpCode.Cdv ->
         { computer with
-            Computer.cpu.c = cpu.a / (pown 2 (comboOperand operand))
+            Computer.cpu.c = cpu.a >>> (comboOperand operand)
             Computer.cpu.ip = cpu.ip + 2 }
       | _ -> failwith "Unknown opcode"
 
