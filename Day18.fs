@@ -24,19 +24,10 @@ let findMinStepsToExit width bytesToSim (bytes: (int * int) array) =
 
   found
 
-let findFirstByteToMakeExitUnreachable width minReachable (bytes: (int * int) array) =
-  let mutable low = minReachable
-  let mutable high = bytes.Length - 1
-
-  while low < high do
-    let middle = (low + high) / 2
-
-    if (findMinStepsToExit width (middle + 1) bytes) |> Option.isSome then
-      low <- middle + 1
-    else
-      high <- middle
-
-  bytes[low]
+let findFirstByteToMakeExitUnreachable width minReachable bytes =
+  bytes
+  |> Itertools.findFirstFail minReachable (fun bytesToSim -> findMinStepsToExit width bytesToSim bytes |> Option.isSome)
+  |> snd
 
 let parse filename =
   filename

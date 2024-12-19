@@ -1,34 +1,18 @@
 module Common.Itertools
 
-let rec combinationsOf2 l =
-  seq {
-    for x in l do
-      for y in l do
-        if x < y then
-          yield [| x; y |]
-  }
+let findFirstFail start goalFunc (array: 'a array) =
+  let mutable low = start
+  let mutable high = array.Length - 1
 
-let rec combinations k lst =
-  match k, lst with
-  | 0, _ -> seq [ [] ]
-  | _, [] -> Seq.empty
-  | k, x :: xs ->
-    let withX = combinations (k - 1) xs |> Seq.map (fun tail -> x :: tail)
-    let withoutX = combinations k xs
-    Seq.append withX withoutX
+  while low < high do
+    let middle = (low + high) / 2
 
-let rec combinationsWithReplacement k lst =
-  match k, lst with
-  | 0, _ -> seq [ [] ]
-  | _, [] -> Seq.empty
-  | k, x :: xs ->
-    seq {
-      for combo in combinationsWithReplacement (k - 1) (x :: xs) do
-        yield x :: combo
+    if goalFunc (middle + 1) then
+      low <- middle + 1
+    else
+      high <- middle
 
-      for combo in combinationsWithReplacement k xs do
-        yield combo
-    }
+  low, array[low]
 
 let countOccurrences elements =
   elements
