@@ -1,6 +1,7 @@
 module Day18
 
 open System.Collections.Generic
+open System.IO
 open Common
 
 let findMinStepsToExit width bytesToSim (bytes: (int * int) array) =
@@ -39,9 +40,10 @@ let findFirstByteToMakeExitUnreachable width minReachable (bytes: (int * int) ar
 
 let parse filename =
   filename
-  |> Input.parseByLine _.Split(",")
-  |> Seq.map (fun vals -> int vals[0], int vals[1])
-  |> Seq.toArray
+  |> File.ReadAllLines
+  |> Array.map (fun line ->
+    let vals = line.Split(",")
+    int vals[0], int vals[1])
 
 module Tests =
   open Xunit
