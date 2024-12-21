@@ -12,10 +12,9 @@ let findCheatsGreaterThanTime savedTime distances (path: (int * int) array) =
       let distance = Grid.get distances (x, y)
       let delta = nDistance - distance - 2
       nDistance >= 0 && delta >= 0 && delta >= savedTime)
-    |> Array.map (fun (nx, ny) -> (x, y, nx, ny))
-    |> Array.distinct
+    |> Array.sumBy (fun _ -> 1)
 
-  path |> Array.collect possibleCheat |> Array.length
+  path |> Array.sumBy possibleCheat
 
 let distancesAndPath start (racetrack: char array array) =
   let distances =
