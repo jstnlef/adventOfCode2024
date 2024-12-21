@@ -3,11 +3,25 @@ module Day20
 open System.IO
 open Common
 
-let findCheatsGreaterThanTime savedTime start distances = 0
+let findCheatsGreaterThanTime savedTime distances (path: (int * int) array) =
+  let possibleCheat (x, y) =
+    [| x + 2, y; x, y + 2; x - 2, y; x, y - 2 |]
+    |> Array.filter (Grid.inBounds distances)
+    |> Array.filter (fun n ->
+      let nDistance = Grid.get distances n
+      let distance = Grid.get distances (x, y)
+      let delta = nDistance - distance - 2
+      nDistance >= 0 && delta >= 0 && delta >= savedTime)
+    |> Array.map (fun (nx, ny) -> (x, y, nx, ny))
+    |> Array.distinct
 
-let distanceGrid start (racetrack: char array array) =
+  path |> Array.collect possibleCheat |> Array.length
+
+let distancesAndPath start (racetrack: char array array) =
   let distances =
     Array.init racetrack.Length (fun i -> Array.init racetrack[i].Length (fun _ -> -1))
+
+  let mutable path = []
 
   let mutable x, y = start
   let mutable cost = 0
@@ -25,11 +39,12 @@ let distanceGrid start (racetrack: char array array) =
           let c = Grid.get racetrack loc
           (c = '.' || c = 'E') && Grid.get distances loc < 0)
 
+      path <- (x, y) :: path
       x <- nx
       y <- ny
       cost <- cost + 1
 
-  distances
+  distances, path |> List.rev |> List.toArray
 
 let parse filename =
   let racetrack = filename |> File.ReadAllLines |> Array.map _.ToCharArray()
@@ -40,12 +55,12 @@ module Tests =
 
   [<Theory>]
   [<InlineData("Inputs/Day20/test.txt", 1, 44)>]
-  [<InlineData("Inputs/Day20/input.txt", 100, -1)>]
+  [<InlineData("Inputs/Day20/input.txt", 100, 1429)>]
   let ``Part 1: Number of cheats to save over 100 picoseconds`` (filename: string, savedTime: int, expected: int) =
     let racetrack, start = parse filename
+    let distances, path = distancesAndPath start racetrack
 
-    let result =
-      findCheatsGreaterThanTime savedTime start (distanceGrid start racetrack)
+    let result = findCheatsGreaterThanTime savedTime distances path
 
     Assert.Equal(expected, result)
 

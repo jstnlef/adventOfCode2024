@@ -12,7 +12,10 @@ let eightWayVectors: Vector2d array =
 let inRegion minW maxW minH maxH (x, y) =
   x >= minW && x < maxW && y >= minH && y < maxH
 
-let inBounds width height (x, y) = inRegion 0 width 0 height (x, y)
+let inBoundsNoGrid width height (x, y) = inRegion 0 width 0 height (x, y)
+
+let inBounds (grid: Grid<'a>) =
+  inBoundsNoGrid grid[0].Length grid.Length
 
 let get (grid: Grid<'a>) (x, y) = grid[y][x]
 
@@ -27,7 +30,7 @@ let find (grid: Grid<'a>) v =
   grid |> iter |> Seq.find (fun pos -> get grid pos = v)
 
 let neighborsNoGrid vectors width height (x, y) =
-  vectors |> Array.map (add (x, y)) |> Array.filter (inBounds width height)
+  vectors |> Array.map (add (x, y)) |> Array.filter (inBoundsNoGrid width height)
 
 let neighbors vectors (grid: Grid<'a>) position =
   neighborsNoGrid vectors grid[0].Length grid.Length position
