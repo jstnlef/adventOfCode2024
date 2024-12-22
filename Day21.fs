@@ -1,65 +1,55 @@
 module Day21
 
+open System
 open System.Collections.Generic
 open System.IO
 open Common
 
 type Keypad = char array array
 
-type KeypadState =
-  { loc: int * int
-    instructions: char list }
+let solveKeypad (keypad: Keypad) =
+  let keyMap =
+    keypad
+    |> Grid.iter
+    |> Seq.map (fun loc -> Grid.get keypad loc, loc)
+    |> Seq.filter (fun (key, _) -> key <> ' ')
+    |> Map
 
-let dirKey ((lx, ly), (rx, ry)) =
-  let x, y = rx - lx, ry - ly
+  let moves = Dictionary()
 
-  match x, y with
-  | 0, 1 -> 'v'
-  | 1, 0 -> '>'
-  | -1, 0 -> '<'
-  | 0, -1 -> '^'
-  | _ -> failwith "Unknown Direction"
+  for l1 in keyMap.Keys do
+    for l2 in keyMap.Keys do
+      if l1 = l2 then
+        moves[(l1, l2)] <- [ "A" ]
+      else
+        let mutable possibilities = []
+        let loc = keyMap[l1]
+        let queue = Queue([ loc, "" ])
+        let mutable minimum = Int32.MaxValue
+        let mutable optimal = false
 
-let generateInstructions (keypad: Keypad) state nextKey =
-  let queue = Queue([ state.loc ])
-  let seen = HashSet([ state.loc ])
-  let pathMap = Dictionary()
-  pathMap[state.loc] <- None
+        while not optimal && queue.Count > 0 do
+          let (x, y), moves = queue.Dequeue()
 
-  let rec reconstructPath node acc =
-    match pathMap[node] with
-    | Some parent -> reconstructPath parent (node :: acc)
-    | None -> node :: acc
+          let neighbors =
+            [| x - 1, y, "<"; x + 1, y, ">"; x, y - 1, "^"; x, y + 1, "v" |]
+            |> Array.filter (fun (x, y, _) -> Grid.inBounds keypad (x, y) && Grid.get keypad (x, y) <> ' ')
 
-  let mutable found = None
+          for nx, ny, nm in neighbors do
+            if Grid.get keypad (nx, ny) = l2 then
+              if minimum < (moves.Length + 1) then
+                optimal <- true
+              else
+                minimum <- moves.Length + 1
+                possibilities <- (moves + nm + "A") :: possibilities
+            else
+              queue.Enqueue((nx, ny), moves + nm)
 
-  while found.IsNone && queue.Count > 0 do
-    let loc = queue.Dequeue()
+        moves[(l1, l2)] <- possibilities
 
-    if Grid.get keypad loc = nextKey then
-      found <- Some loc
-    else
-      for nloc in Grid.cardinalNeighbors keypad loc do
-        if (seen.Contains(nloc) |> not) then
-          seen.Add(nloc) |> ignore
-          queue.Enqueue(nloc)
-          pathMap[nloc] <- Some loc
-
-  let nextKeyLoc = found.Value
-  let path = reconstructPath nextKeyLoc [] |> List.pairwise |> List.map dirKey
-
-  { state with
-      loc = nextKeyLoc
-      instructions = state.instructions @ path @ [ 'A' ] }
+  moves
 
 let directionalKeypad = [| [| ' '; '^'; 'A' |]; [| '<'; 'v'; '>' |] |]
-
-let findDirectionalInstructions instructions =
-  let initialState = { loc = 2, 0; instructions = [] }
-
-  instructions
-  |> Seq.fold (generateInstructions directionalKeypad) initialState
-  |> _.instructions
 
 let numericKeypad =
   [| [| '7'; '8'; '9' |]
@@ -67,25 +57,36 @@ let numericKeypad =
      [| '1'; '2'; '3' |]
      [| ' '; '0'; 'A' |] |]
 
-let findNumericKeyPadInstructions (code: string) =
-  let initialState = { loc = 2, 3; instructions = [] }
+let allPathsNumeric = solveKeypad numericKeypad
+let allPathsDirectional = solveKeypad directionalKeypad
 
-  code.ToCharArray()
-  |> Array.fold (generateInstructions numericKeypad) initialState
-  |> _.instructions
+let findKeyPadInstructions (allPaths: Dictionary<char * char, string list>) code =
+  Seq.zip ("A" + code) code
+  |> Seq.map (fun (a, b) -> allPaths[(a, b)])
+  |> Seq.toList
+  |> Itertools.cartesianProduct
+  |> List.map (String.concat "")
 
-let findInstructions code =
-  let myInstructions =
-    code
-    |> findNumericKeyPadInstructions
-    |> findDirectionalInstructions
-    |> findDirectionalInstructions
+let filterMinLength allmoves =
+  let minLength = allmoves |> List.map String.length |> List.min
+  allmoves |> List.filter (fun s -> String.length s = minLength)
 
-  let s = System.String.Concat(myInstructions)
-  printfn $"{code}: {s}"
-  code, myInstructions
+let findNumericKeyPadInstructions = findKeyPadInstructions allPathsNumeric
 
-let codeComplexity (code: string, sequences: char list) = int code[0..2] * sequences.Length
+let findDirectionalKeyPadInstructions = findKeyPadInstructions allPathsDirectional
+
+let findMinInstructions code =
+  let robot1 = findNumericKeyPadInstructions code
+
+  let robot2 =
+    robot1 |> List.collect findDirectionalKeyPadInstructions |> filterMinLength
+
+  let robot3 =
+    robot2 |> List.collect findDirectionalKeyPadInstructions |> filterMinLength
+
+  code, robot3[0].Length
+
+let codeComplexity (code: string, minSequence: int) = int code[..2] * minSequence
 
 let parse filename = filename |> File.ReadAllLines
 
@@ -94,10 +95,10 @@ module Tests =
 
   [<Theory>]
   [<InlineData("Inputs/Day21/test.txt", 126384)>]
-  [<InlineData("Inputs/Day21/input.txt", -1)>]
-  let ``Part 1: Sum of the complexities of the 5 codes`` (filename: string, expected: int) =
+  [<InlineData("Inputs/Day21/input.txt", 132532)>]
+  let ``Part 1: Sum of the complexities of the 5 codes with 2 robots`` (filename: string, expected: int) =
     let result =
-      filename |> parse |> Array.map findInstructions |> Array.sumBy codeComplexity
+      filename |> parse |> Array.map findMinInstructions |> Array.sumBy codeComplexity
 
     Assert.Equal(expected, result)
 
