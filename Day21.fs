@@ -67,26 +67,27 @@ let findKeyPadInstructions (allPaths: Dictionary<char * char, string list>) code
   |> Itertools.cartesianProduct
   |> List.map (String.concat "")
 
-let filterMinLength allmoves =
-  let minLength = allmoves |> List.map String.length |> List.min
-  allmoves |> List.filter (fun s -> String.length s = minLength)
-
 let findNumericKeyPadInstructions = findKeyPadInstructions allPathsNumeric
 
-let findDirectionalKeyPadInstructions = findKeyPadInstructions allPathsDirectional
+let computeLength depth moves : int64 =
+  let moveLengthInternal memoized depth moves : int64 =
+    let transitions = Seq.zip ("A" + moves) moves
 
-let findMinInstructions code =
-  let robot1 = findNumericKeyPadInstructions code
+    if depth = 1 then
+      transitions
+      |> Seq.sumBy (fun (a, b) -> allPathsDirectional[(a, b)] |> List.head |> _.Length)
+    else
+      transitions
+      |> Seq.sumBy (fun (a, b) -> allPathsDirectional[(a, b)] |> List.map (memoized (depth - 1)) |> List.min)
 
-  let robot2 =
-    robot1 |> List.collect findDirectionalKeyPadInstructions |> filterMinLength
+  Functools.memoizeRec2 moveLengthInternal depth moves
 
-  let robot3 =
-    robot2 |> List.collect findDirectionalKeyPadInstructions |> filterMinLength
+let findMinInstructions numRobots code =
+  let moves = findNumericKeyPadInstructions code
+  let minLength = moves |> List.map (computeLength numRobots) |> List.min
+  code, minLength
 
-  code, robot3[0].Length
-
-let codeComplexity (code: string, minSequence: int) = int code[..2] * minSequence
+let codeComplexity (code: string, minSequence: int64) = int64 code[..2] * minSequence
 
 let parse filename = filename |> File.ReadAllLines
 
@@ -96,15 +97,17 @@ module Tests =
   [<Theory>]
   [<InlineData("Inputs/Day21/test.txt", 126384)>]
   [<InlineData("Inputs/Day21/input.txt", 132532)>]
-  let ``Part 1: Sum of the complexities of the 5 codes with 2 robots`` (filename: string, expected: int) =
+  let ``Part 1: Sum of the complexities of the 5 codes with 2 robots`` (filename: string, expected: int64) =
     let result =
-      filename |> parse |> Array.map findMinInstructions |> Array.sumBy codeComplexity
+      filename |> parse |> Array.sumBy ((findMinInstructions 2) >> codeComplexity)
 
     Assert.Equal(expected, result)
 
   [<Theory>]
-  [<InlineData("Inputs/Day21/test.txt", -1)>]
-  [<InlineData("Inputs/Day21/input.txt", -1)>]
-  let ``Part 2`` (filename: string, expected: int) =
-    let result = 0
+  [<InlineData("Inputs/Day21/test.txt", 154115708116294L)>]
+  [<InlineData("Inputs/Day21/input.txt", 165644591859332L)>]
+  let ``Part 2: Sum of the complexities of the 5 codes with 25 robots`` (filename: string, expected: int64) =
+    let result =
+      filename |> parse |> Array.sumBy ((findMinInstructions 25) >> codeComplexity)
+
     Assert.Equal(expected, result)
