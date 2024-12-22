@@ -1,20 +1,37 @@
 module Day20
 
+open System.Collections.Generic
 open System.IO
 open Common
 
-let findCheatsGreaterThanTime savedTime distances (path: (int * int) array) =
-  let possibleCheat (x, y) =
-    [| x + 2, y; x, y + 2; x - 2, y; x, y - 2 |]
-    |> Array.filter (Grid.inBounds distances)
-    |> Array.filter (fun n ->
-      let nDistance = Grid.get distances n
-      let distance = Grid.get distances (x, y)
-      let delta = nDistance - distance - 2
-      nDistance >= 0 && delta >= 0 && delta >= savedTime)
-    |> Array.sumBy (fun _ -> 1)
+let findCheatsGreaterThanTime timeSaved cheatTime distances (path: (int * int) array) =
+  let cheatSavesEnoughTime startLoc endLoc cheatTime =
+    let endDistance = Grid.get distances endLoc
+    let startDistance = Grid.get distances startLoc
+    let delta = endDistance - startDistance - cheatTime
+    delta >= timeSaved
 
-  path |> Array.sumBy possibleCheat
+  let numberOfCheatsAtLoc maxCheatTime startLoc =
+    let seen = HashSet([ startLoc ])
+    let locsOnPath = HashSet()
+    let queue = Queue([ 0, startLoc ])
+
+    while queue.Count > 0 do
+      let steps, loc = queue.Dequeue()
+      let nsteps = steps + 1
+
+      if nsteps <= maxCheatTime then
+        for nloc in Grid.cardinalNeighbors distances loc do
+          if (seen.Contains(nloc) |> not) then
+            seen.Add(nloc) |> ignore
+            queue.Enqueue(nsteps, nloc)
+
+            if cheatSavesEnoughTime startLoc nloc nsteps then
+              locsOnPath.Add(startLoc, nloc) |> ignore
+
+    locsOnPath.Count
+
+  path |> Array.sumBy (numberOfCheatsAtLoc cheatTime)
 
 let distancesAndPath start (racetrack: char array array) =
   let distances =
@@ -53,19 +70,26 @@ module Tests =
   open Xunit
 
   [<Theory>]
-  [<InlineData("Inputs/Day20/test.txt", 1, 44)>]
-  [<InlineData("Inputs/Day20/input.txt", 100, 1429)>]
-  let ``Part 1: Number of cheats to save over 100 picoseconds`` (filename: string, savedTime: int, expected: int) =
+  [<InlineData("Inputs/Day20/test.txt", 2, 2, 44)>]
+  [<InlineData("Inputs/Day20/input.txt", 100, 2, 1429)>]
+  let ``Part 1: Number of cheats to save over 100 picoseconds``
+    (filename: string, timeSaved: int, cheatTime: int, expected: int)
+    =
     let racetrack, start = parse filename
     let distances, path = distancesAndPath start racetrack
 
-    let result = findCheatsGreaterThanTime savedTime distances path
+    let result = findCheatsGreaterThanTime timeSaved cheatTime distances path
 
     Assert.Equal(expected, result)
 
-  [<Theory>]
-  [<InlineData("Inputs/Day20/test.txt", -1)>]
-  [<InlineData("Inputs/Day20/input.txt", -1)>]
-  let ``Part 2`` (filename: string, expected: int) =
-    let result = 0
+  [<Theory(Skip = "Runs long on input")>]
+  [<InlineData("Inputs/Day20/test.txt", 50, 20, 285)>]
+  [<InlineData("Inputs/Day20/input.txt", 100, 20, 988931)>]
+  let ``Part 2: Number of cheats to save over 100 picoseconds with 20 picosecond cheats``
+    (filename: string, timeSaved: int, cheatTime: int, expected: int)
+    =
+    let racetrack, start = parse filename
+    let distances, path = distancesAndPath start racetrack
+
+    let result = findCheatsGreaterThanTime timeSaved cheatTime distances path
     Assert.Equal(expected, result)
