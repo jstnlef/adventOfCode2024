@@ -69,8 +69,8 @@ let findKeyPadInstructions (allPaths: Dictionary<char * char, string list>) code
 
 let findNumericKeyPadInstructions = findKeyPadInstructions allPathsNumeric
 
-let computeLength depth moves : int64 =
-  let moveLengthInternal memoized depth moves : int64 =
+let numberOfInstructions depth moves : int64 =
+  let numberOfInstructionsInternal memoized depth moves : int64 =
     let transitions = Seq.zip ("A" + moves) moves
 
     if depth = 1 then
@@ -80,11 +80,11 @@ let computeLength depth moves : int64 =
       transitions
       |> Seq.sumBy (fun (a, b) -> allPathsDirectional[(a, b)] |> List.map (memoized (depth - 1)) |> List.min)
 
-  Functools.memoizeRec2 moveLengthInternal depth moves
+  Functools.memoizeRec2 numberOfInstructionsInternal depth moves
 
 let findMinInstructions numRobots code =
   let moves = findNumericKeyPadInstructions code
-  let minLength = moves |> List.map (computeLength numRobots) |> List.min
+  let minLength = moves |> List.map (numberOfInstructions numRobots) |> List.min
   code, minLength
 
 let codeComplexity (code: string, minSequence: int64) = int64 code[..2] * minSequence
