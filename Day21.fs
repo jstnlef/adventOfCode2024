@@ -57,34 +57,35 @@ let numericKeypad =
      [| '1'; '2'; '3' |]
      [| ' '; '0'; 'A' |] |]
 
-let allPathsNumeric = solveKeypad numericKeypad
-let allPathsDirectional = solveKeypad directionalKeypad
+let solvedNumeric = solveKeypad numericKeypad
+let solvedDirectional = solveKeypad directionalKeypad
 
-let findKeyPadInstructions (allPaths: Dictionary<char * char, string list>) code =
+let findNumericKeyPadInstructions code =
   Seq.zip ("A" + code) code
-  |> Seq.map (fun (a, b) -> allPaths[(a, b)])
+  |> Seq.map (fun (a, b) -> solvedNumeric[(a, b)])
   |> Seq.toList
   |> Itertools.cartesianProduct
   |> List.map (String.concat "")
 
-let findNumericKeyPadInstructions = findKeyPadInstructions allPathsNumeric
-
-let numberOfInstructions depth moves : int64 =
-  let numberOfInstructionsInternal memoized depth moves : int64 =
-    let transitions = Seq.zip ("A" + moves) moves
+let numberOfInstructions depth instructions : int64 =
+  let numberOfInstructionsInternal memoized depth instructions : int64 =
+    let transitions = Seq.zip ("A" + instructions) instructions
 
     if depth = 1 then
       transitions
-      |> Seq.sumBy (fun (a, b) -> allPathsDirectional[(a, b)] |> List.head |> _.Length)
+      |> Seq.sumBy (fun (a, b) -> solvedDirectional[(a, b)] |> List.head |> _.Length)
     else
       transitions
-      |> Seq.sumBy (fun (a, b) -> allPathsDirectional[(a, b)] |> List.map (memoized (depth - 1)) |> List.min)
+      |> Seq.sumBy (fun (a, b) -> solvedDirectional[(a, b)] |> List.map (memoized (depth - 1)) |> List.min)
 
-  Functools.memoizeRec2 numberOfInstructionsInternal depth moves
+  Functools.memoizeRec2 numberOfInstructionsInternal depth instructions
 
 let findMinInstructions numRobots code =
-  let moves = findNumericKeyPadInstructions code
-  let minLength = moves |> List.map (numberOfInstructions numRobots) |> List.min
+  let numericInstructions = findNumericKeyPadInstructions code
+
+  let minLength =
+    numericInstructions |> List.map (numberOfInstructions numRobots) |> List.min
+
   code, minLength
 
 let codeComplexity (code: string, minSequence: int64) = int64 code[..2] * minSequence
