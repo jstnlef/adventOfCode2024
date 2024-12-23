@@ -5,7 +5,7 @@ open System.IO
 
 type Network = Dictionary<string, HashSet<string>>
 
-let findInterconnectedComputers (network: Network) =
+let findInterconnectedComputersWhichStartWithT (network: Network) =
   let connected = HashSet()
 
   for n1 in network.Keys do
@@ -20,6 +20,16 @@ let findInterconnectedComputers (network: Network) =
   connected
   |> Seq.filter (fun (n1, n2, n3) -> n1.StartsWith("t") || n2.StartsWith("t") || n3.StartsWith("t"))
   |> Seq.length
+
+let findPasswordForLANParty (network: Network) =
+  let rec findConnected computer (computerSet: HashSet<_>) = ()
+
+  let connected = HashSet()
+
+  for computer in network.Keys do
+    findConnected computer (HashSet([ computer ]))
+
+  connected |> Seq.maxBy (fun cns -> cns)
 
 let createNetwork edges : Network =
   let populate (network: Network) (l, r) =
@@ -50,12 +60,13 @@ module Tests =
   [<InlineData("Inputs/Day23/test.txt", 7)>]
   [<InlineData("Inputs/Day23/input.txt", 1304)>]
   let ``Part 1: Sets of 3 computers which start with name starting with t`` (filename: string, expected: int) =
-    let result = filename |> parse |> findInterconnectedComputers
+    let result = filename |> parse |> findInterconnectedComputersWhichStartWithT
     Assert.Equal(expected, result)
 
   [<Theory>]
   [<InlineData("Inputs/Day23/test.txt", -1)>]
+  [<InlineData("Inputs/Day23/test2.txt", "co,de,ka,ta")>]
   [<InlineData("Inputs/Day23/input.txt", -1)>]
-  let ``Part 2`` (filename: string, expected: int) =
-    let result = 0
+  let ``Part 2: Password for LAN party`` (filename: string, expected: string) =
+    let result = filename |> parse |> findPasswordForLANParty
     Assert.Equal(expected, result)
