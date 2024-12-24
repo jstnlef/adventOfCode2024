@@ -12,24 +12,32 @@ let findInterconnectedComputersWhichStartWithT (network: Network) =
     for n2 in network[n1] do
       for n3 in network[n2] do
         if n1 <> n3 && network[n3].Contains n1 then
-          let interconnected =
-            [| n1; n2; n3 |] |> Array.sort |> (fun names -> names[0], names[1], names[2])
-
-          connected.Add(interconnected) |> ignore
+          connected.Add([ n1; n2; n3 ] |> List.sort) |> ignore
 
   connected
-  |> Seq.filter (fun (n1, n2, n3) -> n1.StartsWith("t") || n2.StartsWith("t") || n3.StartsWith("t"))
+  |> Seq.filter (fun machines -> machines |> List.exists _.StartsWith("t"))
   |> Seq.length
 
 let findPasswordForLANParty (network: Network) =
-  let rec findConnected computer (computerSet: HashSet<_>) = ()
+  let connected = HashSet<string list>()
 
-  let connected = HashSet()
+  let rec findConnected computer (computerSet: Set<string>) =
+    let computers = computerSet |> Seq.toList |> List.sort
+
+    if not (connected.Contains(computers)) then
+      connected.Add(computers) |> ignore
+
+      for neighbor in network[computer] do
+        if
+          not (computerSet.Contains(neighbor))
+          && Set.isSubset computerSet (network[neighbor] |> Set)
+        then
+          findConnected neighbor (Set.add neighbor computerSet)
 
   for computer in network.Keys do
-    findConnected computer (HashSet([ computer ]))
+    findConnected computer (set<string>[computer])
 
-  connected |> Seq.maxBy (fun cns -> cns)
+  connected |> Seq.maxBy _.Length |> String.concat ","
 
 let createNetwork edges : Network =
   let populate (network: Network) (l, r) =
@@ -64,9 +72,9 @@ module Tests =
     Assert.Equal(expected, result)
 
   [<Theory>]
-  [<InlineData("Inputs/Day23/test.txt", -1)>]
+  [<InlineData("Inputs/Day23/test.txt", "co,de,ka,ta")>]
   [<InlineData("Inputs/Day23/test2.txt", "co,de,ka,ta")>]
-  [<InlineData("Inputs/Day23/input.txt", -1)>]
+  [<InlineData("Inputs/Day23/input.txt", "ao,es,fe,if,in,io,ky,qq,rd,rn,rv,vc,vl")>]
   let ``Part 2: Password for LAN party`` (filename: string, expected: string) =
     let result = filename |> parse |> findPasswordForLANParty
     Assert.Equal(expected, result)
