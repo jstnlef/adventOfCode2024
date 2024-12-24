@@ -17,14 +17,34 @@ module Gate =
     | "XOR" -> XOR
     | _ -> failwith "Unknown gate"
 
+  let op gate =
+    match gate with
+    | AND -> (&&&)
+    | OR -> (|||)
+    | XOR -> (^^^)
+
 type Device =
   { inputs: Dictionary<string, int>
     gates: Dictionary<string, Gate * string * string> }
 
 module Device =
   let output device : int64 =
+    let wireOutputs = Dictionary(device.inputs)
 
-    0
+    let rec computeWire wire =
+      if wireOutputs.ContainsKey(wire) then
+        wireOutputs[wire]
+      else
+        let gate, wireA, wireB = device.gates[wire]
+        let result = (Gate.op gate) (computeWire wireA) (computeWire wireB)
+        wireOutputs[wire] <- result
+        result
+
+    seq { 0..64 }
+    |> Seq.map (fun i -> $"z%02d{i}")
+    |> Seq.takeWhile device.gates.ContainsKey
+    |> Seq.indexed
+    |> Seq.sumBy (fun (i, wire) -> computeWire wire <<< i)
 
 let parse filename : Device =
   let split = filename |> File.ReadAllText |> _.Trim().Split("\n\n")
@@ -53,7 +73,7 @@ module Tests =
 
   [<Theory>]
   [<InlineData("Inputs/Day24/test.txt", 2024)>]
-  [<InlineData("Inputs/Day24/input.txt", -1)>]
+  [<InlineData("Inputs/Day24/input.txt", 58639252480880L)>]
   let ``Part 1: Output decimal number`` (filename: string, expected: int64) =
     let result = filename |> parse |> Device.output
     Assert.Equal(expected, result)
