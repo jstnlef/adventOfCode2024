@@ -21,21 +21,19 @@ let findInterconnectedComputersWhichStartWithT (network: Network) =
 let findPasswordForLANParty (network: Network) =
   let connected = HashSet<string list>()
 
-  let rec findConnected computer (computerSet: Set<string>) =
+  let rec findConnected computer (computerSet: HashSet<string>) =
     let computers = computerSet |> Seq.toList |> List.sort
 
     if not (connected.Contains(computers)) then
       connected.Add(computers) |> ignore
 
       for neighbor in network[computer] do
-        if
-          not (computerSet.Contains(neighbor))
-          && Set.isSubset computerSet (network[neighbor] |> Set)
-        then
-          findConnected neighbor (Set.add neighbor computerSet)
+        if not (computerSet.Contains(neighbor)) && computerSet.IsSubsetOf network[neighbor] then
+          computerSet.Add neighbor |> ignore
+          findConnected neighbor computerSet
 
   for computer in network.Keys do
-    findConnected computer (set<string>[computer])
+    findConnected computer (HashSet [ computer ])
 
   connected |> Seq.maxBy _.Length |> String.concat ","
 
