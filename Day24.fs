@@ -81,6 +81,6 @@ module Tests =
   [<Theory>]
   [<InlineData("Inputs/Day24/test.txt", -1)>]
   [<InlineData("Inputs/Day24/input.txt", -1)>]
-  let ``Part 2`` (filename: string, expected: int64) =
-    let result = 0
+  let ``Part 2: 8 wires which need to be swapped to perform addition`` (filename: string, expected: string) =
+    let result = ""
     Assert.Equal(expected, result)
