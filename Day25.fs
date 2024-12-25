@@ -1,9 +1,8 @@
 module Day25
 
 open System.IO
-open Common
 
-let numberOfKeyLockCombinations keys locks =
+let numberOfKeyLockCombinations (keys, locks) =
   let mutable n = 0
 
   for key in keys do
@@ -44,12 +43,5 @@ module Tests =
   [<InlineData("Inputs/Day25/test.txt", 3)>]
   [<InlineData("Inputs/Day25/input.txt", 3508)>]
   let ``Part 1: Number of unique key and lock combinations`` (filename: string, expected: int) =
-    let result = filename |> parse |> Functools.uncurry numberOfKeyLockCombinations
-    Assert.Equal(expected, result)
-
-  [<Theory>]
-  [<InlineData("Inputs/Day25/test.txt", -1)>]
-  [<InlineData("Inputs/Day25/input.txt", -1)>]
-  let ``Part 2`` (filename: string, expected: int) =
-    let result = 0
+    let result = filename |> parse |> numberOfKeyLockCombinations
     Assert.Equal(expected, result)
