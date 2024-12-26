@@ -19,23 +19,25 @@ let maximumNumberOfBananas initialSecrets =
   let priceTotals = Dictionary()
 
   let populatePriceTotalsForBuyer initialSecret =
-    let seen = HashSet()
+    let seen = HashSet(2000)
 
-    let handlePriceWindow priceWindow =
+    let handlePriceWindow (priceWindow: int array) =
+      let price = priceWindow[4]
+
       let deltas =
-        priceWindow |> Array.pairwise |> Array.map (fun (a, b) -> b - a) |> Array.toList
+        [| priceWindow[1] - priceWindow[0]
+           priceWindow[2] - priceWindow[1] <<< 4
+           priceWindow[3] - priceWindow[2] <<< 8
+           price - priceWindow[3] <<< 12 |]
+        |> Array.reduce (fun a b -> a ^^^ b)
 
       if seen.Contains(deltas) |> not then
         seen.Add(deltas) |> ignore
-        let priceAfterSequence = priceWindow[priceWindow.Length - 1]
-
-        match priceTotals.TryGetValue deltas with
-        | false, _ -> priceTotals[deltas] <- priceAfterSequence
-        | true, v -> priceTotals[deltas] <- v + priceAfterSequence
+        priceTotals[deltas] <- priceTotals.GetValueOrDefault(deltas, 0) + price
 
     initialSecret
     |> generateSecretNumbers
-    |> Array.map (fun i -> i % 10L)
+    |> Array.map (fun i -> int (i % 10L))
     |> Array.windowed 5
     |> Array.iter handlePriceWindow
 
@@ -57,6 +59,6 @@ module Tests =
   [<Theory>]
   [<InlineData("Inputs/Day22/test2.txt", 23)>]
   [<InlineData("Inputs/Day22/input.txt", 2445)>]
-  let ``Part 2: Maximum number of bananas`` (filename: string, expected: int64) =
+  let ``Part 2: Maximum number of bananas`` (filename: string, expected: int) =
     let result = filename |> parse |> maximumNumberOfBananas
     Assert.Equal(expected, result)
