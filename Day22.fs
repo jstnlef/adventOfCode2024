@@ -5,9 +5,9 @@ open System.IO
 let secretNumber n initial =
   let generateNext secret =
     let mutable s = secret
-    s <- ((s * 64L) ^^^ s) % 16777216L
-    s <- ((s / 32L) ^^^ s) % 16777216L
-    s <- ((s * 2048L) ^^^ s) % 16777216L
+    s <- ((s <<< 6) ^^^ s) % 16777216L
+    s <- ((s >>> 5) ^^^ s) % 16777216L
+    s <- ((s <<< 11) ^^^ s) % 16777216L
     s
 
   seq { 1..n } |> Seq.fold (fun s _ -> generateNext s) initial
