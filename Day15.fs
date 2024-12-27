@@ -27,7 +27,7 @@ module Warehouse =
     | _ -> failwith "Not a valid direction"
 
   let moveRobot warehouse move =
-    // Grid.print warehouse.grid
+    Grid.print warehouse.grid
     let dx, dy = direction move
 
     let rec findMoveTargets moveTargets =
@@ -41,42 +41,13 @@ module Warehouse =
           moveTargets
         elif c = 'O' then
           findMoveTargets ((tx, ty, c) :: moveTargets)
+        elif c = '[' then
+          findMoveTargets ((tx, ty, c) :: (tx + 1, ty, ']') :: moveTargets)
+        elif c = ']' then
+          findMoveTargets ((tx - 1, ty, '[') :: (tx, ty, c) :: moveTargets)
         else
           // We hit a wall. Nothing is moving.
           []
-
-
-    // let mutable moveTargets = [ (sx, sy, c) ]
-    //
-    //
-    //
-    // let mutable x, y = sx, sy
-    //
-    //
-    //
-    // let mutable foundWall = false
-    // let mutable foundSpace = false
-    //
-    // while not foundWall && not foundSpace do
-    //   x <- x + dx
-    //   y <- y + dy
-    //   let c = Grid.get warehouse.grid (x, y)
-    //
-    //   if c = '.' then
-    //     foundSpace <- true
-    //   elif c = '#' then
-    //     moveTargets <- List.empty
-    //     foundWall <- true
-    //   elif c = 'O' then
-    //     moveTargets <- (x, y, 'O') :: moveTargets
-    // // elif c = '[' then
-    // //   moveTargets.Add(x, y, '[')
-    // //   moveTargets.Add(x + 1, y, ']')
-    // // elif c = ']' then
-    // //   moveTargets.Add(x, y, ']')
-    // //   moveTargets.Add(x - 1, y, '[')
-
-    // moveTargets
 
     let rx, ry = warehouse.robot
     let moveTargets = findMoveTargets [ (rx, ry, '@') ]
