@@ -1,5 +1,6 @@
 module Day15
 
+open System.Collections.Generic
 open System.IO
 open Common
 
@@ -26,34 +27,34 @@ module Warehouse =
     | 'v' -> 0, 1
     | _ -> failwith "Not a valid direction"
 
-  let rec moveSmallBox warehouse (x, y) moveDir =
-    let doMove (x, y) (nx, ny) =
-      let nextObj = Grid.get warehouse.grid (nx, ny)
+  // let rec moveSmallBox warehouse (x, y) moveDir =
+  //   let doMove (x, y) (nx, ny) =
+  //     let nextObj = Grid.get warehouse.grid (nx, ny)
+  //
+  //     if nextObj = '.' then
+  //       warehouse.grid[ny][nx] <- 'O'
+  //       warehouse.grid[y][x] <- '.'
+  //
+  //   let nextPosition = Vector2d.add (x, y) moveDir
+  //   let nextObj = Grid.get warehouse.grid nextPosition
+  //
+  //   if nextObj = 'O' then
+  //     moveSmallBox warehouse nextPosition moveDir
+  //
+  //   doMove (x, y) nextPosition
 
-      if nextObj = '.' then
-        warehouse.grid[ny][nx] <- 'O'
-        warehouse.grid[y][x] <- '.'
-
-    let nextPosition = Vector2d.add (x, y) moveDir
-    let nextObj = Grid.get warehouse.grid nextPosition
-
-    if nextObj = 'O' then
-      moveSmallBox warehouse nextPosition moveDir
-
-    doMove (x, y) nextPosition
-
-  let rec moveBigBox warehouse (lx, ly) move =
-    let doMove leftP rightP dir =
-      let nlx, nly = Vector2d.add leftP dir
-      let nrx, nry = Vector2d.add rightP dir
-      let nextObjL = Grid.get warehouse.grid (nlx, nly)
-      let nextObjR = Grid.get warehouse.grid (nrx, nry)
-      // if nextObjL
-      ()
-
-    let rx, ry = (lx + 1, ly)
-
-    ()
+  // let rec moveBigBox warehouse (lx, ly) move =
+  //   let doMove leftP rightP dir =
+  //     let nlx, nly = Vector2d.add leftP dir
+  //     let nrx, nry = Vector2d.add rightP dir
+  //     let nextObjL = Grid.get warehouse.grid (nlx, nly)
+  //     let nextObjR = Grid.get warehouse.grid (nrx, nry)
+  //     // if nextObjL
+  //     ()
+  //
+  //   let rx, ry = (lx + 1, ly)
+  //
+  //   ()
 
   //
   // let nx, ny = Vector2d.add (x, y) moveDir
@@ -69,29 +70,33 @@ module Warehouse =
   let moveRobot warehouse move =
     // Grid.print warehouse.grid
 
-    let doMove (x, y) (nx, ny) =
-      let nextObj = Grid.get warehouse.grid (nx, ny)
+    let moveTargets = List()
+    let dx, dy = direction move
+    let mutable foundWall = false
+    let mutable foundSpace = false
+    let mutable x, y = warehouse.robot
 
-      if nextObj = '.' then
-        warehouse.grid[ny][nx] <- '@'
-        warehouse.grid[y][x] <- '.'
-        { warehouse with robot = nx, ny }
-      else
-        warehouse
+    while not foundWall && not foundSpace do
+      x <- x + dx
+      y <- y + dy
+      let c = Grid.get warehouse.grid (x, y)
 
-    let robotPosition = warehouse.robot
-    let moveDir = direction move
-    let nx, ny = Vector2d.add robotPosition moveDir
-    let nextObj = Grid.get warehouse.grid (nx, ny)
+      if c = '.' then foundSpace <- true
+      elif c = '#' then foundWall <- true
+      else moveTargets.Add(x, y)
 
-    if nextObj = 'O' then
-      moveSmallBox warehouse (nx, ny) moveDir
-    elif nextObj = '[' then
-      moveBigBox warehouse (nx, ny) move
-    elif nextObj = ']' then
-      moveBigBox warehouse (nx - 1, ny) move
+    if foundSpace then
+      let x, y = warehouse.robot
+      warehouse.grid[y][x] <- '.'
+      let nx, ny = Vector2d.add warehouse.robot (dx, dy)
+      warehouse.grid[ny][nx] <- '@'
 
-    doMove robotPosition (nx, ny)
+      for tx, ty in moveTargets do
+        warehouse.grid[ty + dy][tx + dx] <- 'O'
+
+      { warehouse with robot = nx, ny }
+    else
+      warehouse
 
   let expand warehouse =
     let expandRow (row: char array) =
@@ -118,12 +123,8 @@ module Warehouse =
         grid = warehouse.grid |> Array.map expandRow
         robot = x * 2, y }
 
-let findRobot grid =
-  grid |> Grid.iter |> Seq.find (fun pos -> Grid.get grid pos = '@')
-
 let simulateRobot warehouse =
-  warehouse.moves
-  |> Array.fold (fun warehouse move -> Warehouse.moveRobot warehouse move) warehouse
+  warehouse.moves |> Array.fold Warehouse.moveRobot warehouse
 
 let parse filename =
   let text = filename |> File.ReadAllText
@@ -133,7 +134,7 @@ let parse filename =
 
   { grid = grid
     moves = moves.ToCharArray()
-    robot = findRobot grid }
+    robot = Grid.find grid '@' }
 
 module Tests =
   open Xunit

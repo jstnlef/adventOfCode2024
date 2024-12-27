@@ -42,7 +42,7 @@ let eightWayNeighbors (grid: Grid<'a>) position = neighbors eightWayVectors grid
 let print (grid: Grid<'a>) =
   let s =
     grid
-    |> Array.map (fun row -> row |> Array.map string |> String.concat " ")
+    |> Array.map (fun row -> row |> Array.map string |> String.concat "")
     |> String.concat "\n"
 
-  printf $"%s{s}\n"
+  printf $"%s{s}\n\n"
