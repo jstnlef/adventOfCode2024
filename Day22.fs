@@ -16,7 +16,7 @@ let generateSecretNumbers initialSecret =
 let lastSecretNumber = generateSecretNumbers >> Array.last
 
 let maximumNumberOfBananas initialSecrets =
-  let priceTotals = Dictionary()
+  let priceTotals = Dictionary(7000)
 
   let populatePriceTotalsForBuyer initialSecret =
     let seen = HashSet(2000)
@@ -25,11 +25,10 @@ let maximumNumberOfBananas initialSecrets =
       let price = priceWindow[4]
 
       let deltas =
-        [| priceWindow[1] - priceWindow[0]
-           priceWindow[2] - priceWindow[1] <<< 4
-           priceWindow[3] - priceWindow[2] <<< 8
-           price - priceWindow[3] <<< 12 |]
-        |> Array.reduce (fun a b -> a ^^^ b)
+        (priceWindow[1] - priceWindow[0])
+        ^^^ (priceWindow[2] - priceWindow[1] <<< 4)
+        ^^^ (priceWindow[3] - priceWindow[2] <<< 8)
+        ^^^ (price - priceWindow[3] <<< 12)
 
       if seen.Contains(deltas) |> not then
         seen.Add(deltas) |> ignore
@@ -37,7 +36,7 @@ let maximumNumberOfBananas initialSecrets =
 
     initialSecret
     |> generateSecretNumbers
-    |> Array.map (fun i -> int (i % 10L))
+    |> Array.map (fun i -> i % 10L |> int)
     |> Array.windowed 5
     |> Array.iter handlePriceWindow
 
