@@ -27,46 +27,6 @@ module Warehouse =
     | 'v' -> 0, 1
     | _ -> failwith "Not a valid direction"
 
-  // let rec moveSmallBox warehouse (x, y) moveDir =
-  //   let doMove (x, y) (nx, ny) =
-  //     let nextObj = Grid.get warehouse.grid (nx, ny)
-  //
-  //     if nextObj = '.' then
-  //       warehouse.grid[ny][nx] <- 'O'
-  //       warehouse.grid[y][x] <- '.'
-  //
-  //   let nextPosition = Vector2d.add (x, y) moveDir
-  //   let nextObj = Grid.get warehouse.grid nextPosition
-  //
-  //   if nextObj = 'O' then
-  //     moveSmallBox warehouse nextPosition moveDir
-  //
-  //   doMove (x, y) nextPosition
-
-  // let rec moveBigBox warehouse (lx, ly) move =
-  //   let doMove leftP rightP dir =
-  //     let nlx, nly = Vector2d.add leftP dir
-  //     let nrx, nry = Vector2d.add rightP dir
-  //     let nextObjL = Grid.get warehouse.grid (nlx, nly)
-  //     let nextObjR = Grid.get warehouse.grid (nrx, nry)
-  //     // if nextObjL
-  //     ()
-  //
-  //   let rx, ry = (lx + 1, ly)
-  //
-  //   ()
-
-  //
-  // let nx, ny = Vector2d.add (x, y) moveDir
-  // let nextObj = Grid.get warehouse.grid (nx, ny)
-  //
-  // if nextObj = '[' then
-  //   moveBigBox warehouse (nx, ny) (nx + 1, ny) moveDir
-  // elif nextObj = ']' then
-  //   moveBigBox warehouse (nx - 1, ny) (nx, ny) moveDir
-  //
-  // doMove (x, y) (nx, ny)
-
   let moveRobot warehouse move =
     // Grid.print warehouse.grid
 
@@ -81,9 +41,16 @@ module Warehouse =
       y <- y + dy
       let c = Grid.get warehouse.grid (x, y)
 
-      if c = '.' then foundSpace <- true
-      elif c = '#' then foundWall <- true
-      else moveTargets.Add(x, y)
+      if c = '.' then
+        foundSpace <- true
+      elif c = '#' then
+        foundWall <- true
+      elif c = 'O' then
+        moveTargets.Add(x, y, 'O')
+      elif c = '[' then
+        foundWall <- true
+      elif c = ']' then
+        foundWall <- true
 
     if foundSpace then
       let x, y = warehouse.robot
@@ -91,8 +58,8 @@ module Warehouse =
       let nx, ny = Vector2d.add warehouse.robot (dx, dy)
       warehouse.grid[ny][nx] <- '@'
 
-      for tx, ty in moveTargets do
-        warehouse.grid[ty + dy][tx + dx] <- 'O'
+      for tx, ty, c in moveTargets do
+        warehouse.grid[ty + dy][tx + dx] <- c
 
       { warehouse with robot = nx, ny }
     else
